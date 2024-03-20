@@ -1,0 +1,16 @@
+{
+  "update": {
+    "message": {
+      "text": "milk 2.30pm 100ml",
+      "from": {
+        "id": 23542,
+        "first_name": "CH",
+        "is_bot": "False"
+      },
+      "chat": {
+        "id": 22,
+        "type": "private"
+      }
+    }
+  }
+}
