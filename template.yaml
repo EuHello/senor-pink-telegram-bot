@@ -16,6 +16,14 @@ Globals:
 Resources:
   TelegramBot:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Connectors:
+      MyConn:
+        Properties:
+          Destination:
+            Id: FeedingRecords
+          Permissions:
+            - Read
+            - Write
     Properties:
       CodeUri: telegram_bot/
       Handler: app.lambda_handler
@@ -23,10 +31,7 @@ Resources:
       Timeout: 60
       Environment:
         Variables:
-          TABLE_NAME: milk
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: milk
+          TABLE_NAME: !Ref FeedingRecords
       Architectures:
       - x86_64
       Events:
@@ -35,16 +40,16 @@ Resources:
           Properties:
             Path: /message
             Method: post
-  MilkRecords:
+  FeedingRecords:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: milk
+      TableName: feedings
       AttributeDefinitions:
       - AttributeName: id
         AttributeType: N
       KeySchema:
         - AttributeName: id
-          KeyType: Hash
+          KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
