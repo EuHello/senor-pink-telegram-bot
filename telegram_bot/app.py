@@ -1,6 +1,11 @@
 import json
-
+import logging
+import os
 # import requests
+
+
+logger = logging.getLogger()
+logger.setLevel("INFO")
 
 
 def lambda_handler(event, context):
@@ -32,6 +37,11 @@ def lambda_handler(event, context):
     #     print(e)
 
     #     raise e
+
+    logger.debug(os.environ['AWS_LAMBDA_LOG_GROUP_NAME'])
+    logger.debug(os.environ['AWS_LAMBDA_LOG_STREAM_NAME'])
+    logger.info("EVENT")
+    logger.info(event)
 
     return {
         "statusCode": 200,
