@@ -42,6 +42,12 @@ def lambda_handler(event, context):
     logger.debug(os.environ['AWS_LAMBDA_LOG_STREAM_NAME'])
     logger.info("EVENT")
     logger.info(event)
+    logger.info("EVENT-body")
+    logger.info(event['body'])
+    logger.info("EVENT-body-message")
+    logger.info(event['body']['message'])
+    logger.info("EVENT-body-message-text")
+    logger.info(event['body']['message']['text'])
 
     return {
         "statusCode": 200,
