@@ -40,6 +40,9 @@ Resources:
           Properties:
             Path: /message
             Method: post
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: BOT_TOKEN
       Layers:
         - arn:aws:lambda:ap-southeast-2:665172237481:layer:AWS-Parameters-and-Secrets-Lambda-Extension:11
   FeedingRecords:
