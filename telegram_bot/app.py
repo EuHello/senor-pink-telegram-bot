@@ -98,10 +98,22 @@ def lambda_handler(event, context):
         ret = json.loads(event['body'])['message']
     except json.JSONDecodeError as e:
         logger.error(f"{BOT_APP}Error parsing json: {e}")
+        return {
+            'statusCode': 400,
+            "body": json.dumps({"message": "Error parsing json."})
+        }
     except KeyError as e:
-        logger.error(f"{BOT_APP}Key not found in json: {e}")
+        logger.error(f"{BOT_APP}Error. Key not found in json: {e}")
+        return {
+            'statusCode': 400,
+            "body": json.dumps({"message": "Error. Key not found in json."})
+        }
     except Exception as e:
-        logger.error(f"{BOT_APP}An unexpected error occurs: {e} ")
+        logger.error(f"{BOT_APP}Error. An unexpected error occurs: {e} ")
+        return {
+            'statusCode': 400,
+            "body": json.dumps({"message": "Error. An unexpected error occurs."})
+        }
 
     data = json.loads(event['body'])['message']
     user = create_user(data)
@@ -112,7 +124,5 @@ def lambda_handler(event, context):
 
     return {
         "statusCode": 200,
-        "body": json.dumps({
-            "message": "Ok"
-        }),
+        "body": json.dumps({"message": "Ok"})
     }
