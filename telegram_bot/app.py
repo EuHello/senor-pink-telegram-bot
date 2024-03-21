@@ -4,8 +4,8 @@ import os
 import requests
 import urllib.request
 
-from config import valid_user_ids, BOT_BASE_URL, BOT_METHOD, TOKEN_PARAM_PATH, SECRET_EXT_PORT, BOT_TOKEN
-from user import TelegramUser
+from .config import valid_user_ids, BOT_BASE_URL, BOT_METHOD, TOKEN_PARAM_PATH, SECRET_EXT_PORT, BOT_TOKEN
+from .user import TelegramUser
 
 logger = logging.getLogger()
 logger.setLevel('INFO')
@@ -13,13 +13,13 @@ logger.setLevel('INFO')
 BOT_APP = 'BOT_APP: '
 
 
-def create_user(message_body: dict):
-    user = TelegramUser(user_id=message_body['from']['id'],
-                        username = message_body['from']['username'],
-                        first_name = message_body['from']['first_name'],
-                        is_bot=message_body['from']['is_bot'])
-    user.add_chat_id(message_body['chat']['id'])
-    user.add_message(message_body['text'])
+def create_user(data: dict):
+    user = TelegramUser(user_id=data['from']['id'],
+                        username = data['from']['username'],
+                        first_name = data['from']['first_name'],
+                        is_bot=data['from']['is_bot'])
+    user.set_chat_id(data['chat']['id'])
+    user.set_message(data['text'])
     return user
 
 
@@ -94,12 +94,8 @@ def lambda_handler(event, context):
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
 
-    # logger.debug(os.environ['AWS_LAMBDA_LOG_GROUP_NAME'])
-    # logger.debug(os.environ['AWS_LAMBDA_LOG_STREAM_NAME'])
-
     try:
-        body = json.loads(event['body'])
-        message_body = body['message']
+        ret = json.loads(event['body'])['message']
     except json.JSONDecodeError as e:
         logger.error(f"{BOT_APP}Error parsing json: {e}")
     except KeyError as e:
@@ -107,7 +103,8 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(f"{BOT_APP}An unexpected error occurs: {e} ")
 
-    user = create_user(message_body)
+    data = json.loads(event['body'])['message']
+    user = create_user(data)
 
     if validate_user(user):
         logger.info(f"{BOT_APP}Valid user={user.first_name}, message={user.message}")
