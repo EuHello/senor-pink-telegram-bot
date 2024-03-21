@@ -7,21 +7,17 @@ class TelegramUser:
         self.chat_id = -1
         self.message = ''
 
-    def add_chat_id(self, chat_id: int):
+    def set_chat_id(self, chat_id: int):
         self.chat_id = chat_id
 
-    def add_first_name(self, first_name: str):
-        if first_name is not None:
-            self.first_name = first_name
+    def set_first_name(self, first_name: str):
+        self.first_name = first_name
 
-    def add_username(self, username: str):
-        if username is not None:
-            self.name = username
+    def set_username(self, username: str):
+        self.name = username
 
-    def add_is_bot(self, is_bot: bool):
-        if isinstance(is_bot, bool):
-            self.is_bot = is_bot
+    def set_is_bot(self, is_bot: bool):
+        self.is_bot = is_bot
 
-    def add_message(self, message: str):
-        if message is not None and len(message) > 0:
-            self.message = message
+    def set_message(self, message: str):
+        self.message = message
