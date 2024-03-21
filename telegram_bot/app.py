@@ -56,13 +56,13 @@ def parse_text():
     return True
 
 
-def reply_user(chat_id: int, message: str):
+def reply_user(chat_id: int, reply_message: str):
     """
     Wrapper function that responds a message to TelegramUser.
 
     Params:
-        chat_id: int, chat_id of the user
-        message: str, message to reply to the user
+        chat_id:       int, chat_id of the user
+        reply_message: str, message to reply to the user
 
     Returns:
         True:  bool, if no issue found
@@ -73,23 +73,23 @@ def reply_user(chat_id: int, message: str):
         logger.info(f"{BOT_APP}Invalid Token")
         return False
     reply_url = get_bot_url(token)
-    response = chat_user(chat_id, message, reply_url)
+    response = chat_user(chat_id, reply_message, reply_url)
     return True
 
 
-def chat_user(chat_id: int, text: str, chat_url):
+def chat_user(chat_id: int, reply_text: str, chat_url):
     """
     Performs a POST request to Telegram API.
 
     Params:
-        chat_id:  int, chat_id of the user
-        text:     str, text message to reply to the user
-        chat_url: str, Telegram API endpoint
+        chat_id:    int, chat_id of the user
+        reply_text: str, text message to reply to the user
+        chat_url:   str, Telegram API endpoint
 
     Returns:
         json:     json response from Telegram API
     """
-    params = {"chat_id": chat_id, "text": text}
+    params = {"chat_id": chat_id, "text": reply_text}
     response = requests.post(chat_url, json=params)
     return response.json()
 
