@@ -5,17 +5,28 @@ import requests
 import urllib.request
 
 from config import valid_user_ids, valid_usernames, BOT_BASE_URL, BOT_METHOD, TOKEN_PARAM_PATH, SECRET_EXT_PORT, BOT_TOKEN
+from user import TelegramUser
 
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
 
-def validate_user(username: str, userid: int, bot_status: bool):
-    if bot_status:
+def create_user(message_body: dict):
+    user = TelegramUser(user_id=message_body['from']['id'],
+                        username = message_body['from']['username'],
+                        first_name = message_body['from']['first_name'],
+                        is_bot=message_body['from']['is_bot'])
+    user.add_chat_id(message_body['chat']['id'])
+    user.add_message(message_body['text'])
+    return user
+
+
+def validate_user(user: TelegramUser):
+    if user.is_bot:
         return False
-    if userid in valid_user_ids:
-        return True
-    if username in valid_usernames:
+    if user.chat_id < 0:
+        return False
+    if user.uid in valid_user_ids:
         return True
     return False
 
@@ -24,13 +35,13 @@ def parse_text():
     return True
 
 
-def reply_user(chat_id: int, text: str):
+def reply_user(chat_id: int, message: str):
     token = get_bot_credentials()
     if token is None:
         logger.info("Invalid Token")
         return False
     reply_url = get_bot_url(token)
-    response = chat_user(chat_id, text, reply_url)
+    response = chat_user(chat_id, message, reply_url)
     return True
 
 
@@ -94,15 +105,11 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error("An unexpected error occurs ", e)
 
-    message_text = message_body['text']
-    chat_id = message_body['chat']['id']
-    username = message_body['from']['username']
-    user = message_body['from']['first_name']
-    userid = message_body['from']['id']
-    is_bot = message_body['from']['is_bot']
+    user = create_user(message_body)
 
-    if validate_user(username, userid, is_bot):
-        reply_user(chat_id, "Ok")
+    if validate_user(user):
+        logger.info(f"Valid user={user.first_name}, message={user.message}")
+        reply_user(user.chat_id, "Ok")
 
     return {
         "statusCode": 200,
