@@ -2,8 +2,9 @@ import json
 import logging
 import os
 import requests
+import urllib.request
 
-from config import valid_user_ids, valid_usernames, REPLY_URL
+from config import valid_user_ids, valid_usernames, BOT_BASE_URL, BOT_METHOD, TOKEN_PARAM_PATH, SECRET_EXT_PORT, BOT_TOKEN
 
 logger = logging.getLogger()
 logger.setLevel("INFO")
@@ -24,10 +25,40 @@ def parse_text():
 
 
 def reply_user(chat_id: int, text: str):
-    url = REPLY_URL
+    token = get_bot_credentials()
+    if token is None:
+        logger.info("Invalid Token")
+        return False
+    reply_url = get_bot_url(token)
+    response = chat_user(chat_id, text, reply_url)
+    return True
+
+
+def chat_user(chat_id: int, text: str, chat_url):
     params = {"chat_id": chat_id, "text": text}
-    response = requests.post(url, json=params)
+    response = requests.post(chat_url, json=params)
     return response.json()
+
+
+def get_bot_url(credentials):
+    url = f'{BOT_BASE_URL}{credentials}/{BOT_METHOD}'
+    return url
+
+
+def get_bot_credentials(bot_name=BOT_TOKEN):
+    secret_ext_endpoint = (f'http://localhost:{SECRET_EXT_PORT}/systemsmanager/parameters/'
+                           f'get?name={TOKEN_PARAM_PATH}&withDecryption=true')
+    request_ssm = urllib.request.Request(secret_ext_endpoint)
+    request_ssm.add_header('X-Aws-Parameters-Secrets-Token', os.environ.get('AWS_SESSION_TOKEN'))
+    resp = urllib.request.urlopen(request_ssm).read()
+
+    secret_name = json.loads(resp)['Parameter']['Name']
+    secret = json.loads(resp)['Parameter']['Value']
+
+    if secret_name == bot_name:
+        return secret
+
+    return None
 
 
 def lambda_handler(event, context):
@@ -71,7 +102,7 @@ def lambda_handler(event, context):
     is_bot = message_body['from']['is_bot']
 
     if validate_user(username, userid, is_bot):
-        response = reply_user(chat_id, "Yes im working")
+        reply_user(chat_id, "Ok")
 
     return {
         "statusCode": 200,
