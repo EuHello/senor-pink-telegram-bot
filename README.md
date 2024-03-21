@@ -113,3 +113,12 @@ https://docs.aws.amazon.com/systems-manager/latest/userguide/ps-integration-lamb
 https://community.aws/posts/parameters-and-secrets-lambda-extension-with-python  
 https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_lambda.html#retrieving-secrets_lambda_ARNs  
 
+### Logging with AWS CloudWatch
+https://docs.aws.amazon.com/lambda/latest/dg/python-logging.html#python-logging-cwconsole  
+
+### Set Log Retention with AWS CloudWatch
+https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html#SettingLogRetention  
+
+### Change Log timezone in AWS CloudWatch
+https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html#ViewingLogData  
+https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/modify_graph_date_time.html#set-time-zone-Cloudwatch-graph  
