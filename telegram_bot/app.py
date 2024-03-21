@@ -4,7 +4,7 @@ import os
 import requests
 import urllib.request
 
-from .config import valid_user_ids, BOT_BASE_URL, BOT_METHOD, TOKEN_PARAM_PATH, SECRET_EXT_PORT, BOT_TOKEN
+from .config import allowed_ids, BOT_BASE_URL, BOT_METHOD, TOKEN_PARAM_PATH, SECRET_EXT_PORT, BOT_TOKEN
 from .user import TelegramUser
 
 logger = logging.getLogger()
@@ -32,7 +32,7 @@ def create_user(data: dict):
     return user
 
 
-def validate_user(user: TelegramUser):
+def validate_user(user: TelegramUser, allowed_users=allowed_ids):
     """
     Validates TelegramUser instance. Checks whether lambda handler should act on the user.
 
@@ -43,11 +43,12 @@ def validate_user(user: TelegramUser):
         True:  bool, if user is valid
         False: bool, otherwise
     """
+    print(allowed_users)
     if user.is_bot:
         return False
     if user.chat_id < 0:
         return False
-    if user.uid in valid_user_ids:
+    if user.uid in allowed_users:
         return True
     return False
 
