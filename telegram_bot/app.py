@@ -4,11 +4,13 @@ import os
 import requests
 import urllib.request
 
-from config import valid_user_ids, valid_usernames, BOT_BASE_URL, BOT_METHOD, TOKEN_PARAM_PATH, SECRET_EXT_PORT, BOT_TOKEN
+from config import valid_user_ids, BOT_BASE_URL, BOT_METHOD, TOKEN_PARAM_PATH, SECRET_EXT_PORT, BOT_TOKEN
 from user import TelegramUser
 
 logger = logging.getLogger()
-logger.setLevel("INFO")
+logger.setLevel('INFO')
+
+BOT_APP = 'BOT_APP: '
 
 
 def create_user(message_body: dict):
@@ -38,7 +40,7 @@ def parse_text():
 def reply_user(chat_id: int, message: str):
     token = get_bot_credentials()
     if token is None:
-        logger.info("Invalid Token")
+        logger.info(f"{BOT_APP}Invalid Token")
         return False
     reply_url = get_bot_url(token)
     response = chat_user(chat_id, message, reply_url)
@@ -92,23 +94,23 @@ def lambda_handler(event, context):
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
 
-    logger.debug(os.environ['AWS_LAMBDA_LOG_GROUP_NAME'])
-    logger.debug(os.environ['AWS_LAMBDA_LOG_STREAM_NAME'])
+    # logger.debug(os.environ['AWS_LAMBDA_LOG_GROUP_NAME'])
+    # logger.debug(os.environ['AWS_LAMBDA_LOG_STREAM_NAME'])
 
     try:
         body = json.loads(event['body'])
         message_body = body['message']
     except json.JSONDecodeError as e:
-        logger.error("Error parsing json: ", e)
+        logger.error(f"{BOT_APP}Error parsing json: {e}")
     except KeyError as e:
-        logger.error("Key not found in json: ", e)
+        logger.error(f"{BOT_APP}Key not found in json: {e}")
     except Exception as e:
-        logger.error("An unexpected error occurs ", e)
+        logger.error(f"{BOT_APP}An unexpected error occurs: {e} ")
 
     user = create_user(message_body)
 
     if validate_user(user):
-        logger.info(f"Valid user={user.first_name}, message={user.message}")
+        logger.info(f"{BOT_APP}Valid user={user.first_name}, message={user.message}")
         reply_user(user.chat_id, "Ok")
 
     return {
