@@ -7,7 +7,6 @@ from telegram_bot import app
 @pytest.fixture()
 def apigw_event():
     """ Generates API GW Event"""
-
     return {
         "body": '{'
                 '"update_id":10000,'
@@ -85,7 +84,6 @@ def apigw_event():
 @pytest.fixture()
 def apigw_event_incorrect():
     """ Generates incorrect API GW Event"""
-
     return {
         "body": '{'
                 '"update_id":10000'
@@ -143,7 +141,6 @@ def apigw_event_incorrect():
 
 
 def test_lambda_handler(apigw_event):
-
     ret = app.lambda_handler(apigw_event, "")
     data = json.loads(ret["body"])
 
@@ -153,7 +150,6 @@ def test_lambda_handler(apigw_event):
 
 
 def test_lambda_handler_exception(apigw_event_incorrect):
-
     ret = app.lambda_handler(apigw_event_incorrect, "")
     data = json.loads(ret["body"])
 
