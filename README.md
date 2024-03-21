@@ -1,7 +1,7 @@
 # About
 A Telegram bot that records babies' milk feedings for allowed users.  
 Essentially, a bot that reads chat messages, writes to DB, and responds.  
-Named after the legendary Senor Pink from One Piece.  
+Named after the legendary Señor Pink from One Piece.  
 
 ## Infrastructure 
 AWS Serverless Application Model (AWS SAM) with AWS Lambda  
