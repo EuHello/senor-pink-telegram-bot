@@ -12,6 +12,10 @@ logger.setLevel('INFO')
 
 APP = 'BOT_APP: '
 
+if os.environ.get('ENV') is None:
+    ENV = cfg.ENV
+else:
+    ENV = os.environ['ENV']
 
 def create_user(data: dict):
     """
@@ -85,6 +89,7 @@ def reply_user(chat_id: int, reply_message: str):
 def get_bot_url(credentials):
     """
     Construct Telegram API URL based on Bot credentials.
+    URL format: https://api.telegram.org/bot<token>/METHOD_NAME
 
     Params:
         credentials: str, Telegram Bot private token
@@ -167,7 +172,7 @@ def lambda_handler(event: dict, context: object):
 
     if validate_user(user):
         logger.info(f"{APP}Validated user={user.first_name}, message={user.message}")
-        if cfg.ENV == 'PROD':
+        if ENV == 'PROD':
             reply_user(user.chat_id, "Ok")
 
     return {

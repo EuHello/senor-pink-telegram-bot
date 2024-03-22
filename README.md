@@ -122,3 +122,8 @@ https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups
 ### Change Log timezone in AWS CloudWatch
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html#ViewingLogData  
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/modify_graph_date_time.html#set-time-zone-Cloudwatch-graph  
+
+
+### Setup Environment Variables
+ENV = PROD, DEV etc.  
+https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-sam

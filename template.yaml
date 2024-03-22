@@ -32,6 +32,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref FeedingRecords
+          ENV: PROD
       Architectures:
       - x86_64
       Events:
