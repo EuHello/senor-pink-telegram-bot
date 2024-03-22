@@ -142,3 +142,8 @@ class TestValidateUser:
 
     def test_validate_large_chatid(self, user_large_chat_id, test_allowed_users):
         assert app.validate_user(user_large_chat_id, test_allowed_users) == True
+
+class TestGetBotUrl:
+    def test_get_bot_url(self):
+        assert app.get_bot_url('TOKEN') == 'https://api.telegram.org/botTOKEN/sendMessage'
+
