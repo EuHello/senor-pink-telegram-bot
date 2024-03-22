@@ -33,19 +33,19 @@ https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/s
 
 
 Initiate SAM directory and templates  
-```bash
+```
 sam init                                  # Initiate SAM directory and templates
 ```
 
 Key AWS SAM commands for build, testing and deployment  
-```bash
+```
 sam validate                               # Validates SAM template.yaml
 sam build --use-container                  # Builds .aws-sam, uses docker
 sam deploy --guided --profile <profile>    # Builds zip, deploy to S3 
 ```
 
 Local Testing - use after sam build
-```bash
+```
 sam local invoke -e events/event.json     # Invokes Lambda function with event json. Creates local Docker
 sam local start-api                       # Simulate local Api Gateway
 
@@ -54,12 +54,12 @@ sam sync --no-watch                       # Stop sync
 ```
 
 Pulling logs from AWS
-```bash
+```
 sam logs -n <resource name> --stack-name <mystack>  
 ```
 
 View Endpoints and Resources
-```bash
+```
 sam list endpoints --region <region> --profile <profile>
 sam list resources --region <region> --profile <profile>
 ```
@@ -84,7 +84,8 @@ https://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started-cli
 
 
 ### Creating Web-hook
-```bash
+Create a web-hook with a POST request to Telegram API. 
+```
 curl -F "url=https://<YOURDOMAIN.EXAMPLE>/<WEBHOOKLOCATION>" -F "certificate=@<YOURCERTIFICATE>.pem" https://api.telegram.org/bot<YOURTOKEN>/setWebhook
 ```
 https://core.telegram.org/bots/webhooks#how-do-i-set-a-webhook-for-either-type  
@@ -92,38 +93,64 @@ https://core.telegram.org/bots/webhooks#how-do-i-set-a-webhook-for-either-type
 
 ## Test
 Unit tests with pytest  
-
+```bash
+pytest
+```
 
 ## Odds and Ends
 ### AWS Parameter Store
-Stores telegram bot token as a secret key.  
+Add Telegram bot token as a secret (or secure secret key) via AWS Parameter Store console.
 
 ### Policy to allow AWS Lambda function to read from Parameter Store 
 On SAM Template, add policy template for SSMParameterReadPolicy.  
+```yaml
+Resources:
+  ResourceName:
+    Properties:
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: Token
+```
 https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html  
 https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-template-list.html#ssm-parameter-read-policy  
 https://stackoverflow.com/questions/53361664/aws-sam-managed-policy-for-ssm-get-parameter  
 
 
 ### AWS Parameters and Secrets Lambda Extension
-Extension allows AWS Lambda to pull secret keys from Parameter Store.  
+Extension allows AWS Lambda to pull secret keys from AWS Parameter Store.  
 Extension uses cache, which reduces API calls, reduces cost.  
 Create Extension layer in SAM Template.  
+```yaml
+Resources:
+  ResourceName:
+    Properties:
+      Layers:
+        - arn:aws:lambda:ap-southeast-2:665172237481:layer:AWS-Parameters-and-Secrets-Lambda-Extension:11
+```
 https://docs.aws.amazon.com/systems-manager/latest/userguide/ps-integration-lambda-extensions.html  
 https://community.aws/posts/parameters-and-secrets-lambda-extension-with-python  
 https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_lambda.html#retrieving-secrets_lambda_ARNs  
 
-### Logging with AWS CloudWatch
+### Logging with AWS CloudWatch console
 https://docs.aws.amazon.com/lambda/latest/dg/python-logging.html#python-logging-cwconsole  
 
-### Set Log Retention with AWS CloudWatch
+### Set Log Retention with AWS CloudWatch console
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html#SettingLogRetention  
 
-### Change Log timezone in AWS CloudWatch
+### Change Log timezone in AWS CloudWatch console
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html#ViewingLogData  
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/modify_graph_date_time.html#set-time-zone-Cloudwatch-graph  
 
 
 ### Setup Environment Variables
-ENV = PROD, DEV etc.  
+To toggle between production and development environments. e.g. ENV = 'Dev' or ENV = 'PROD'.
+This can be done by creating an environment variable in SAM Template.
+```yaml
+Resources:
+  ResourceName:
+    Properties:
+      Environment:
+        Variables:
+          KEY: file.txt
+```
 https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-sam
