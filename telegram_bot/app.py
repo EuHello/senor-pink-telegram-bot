@@ -4,13 +4,13 @@ import os
 import requests
 import urllib.request
 
-from .config import allowed_ids, BOT_BASE_URL, BOT_METHOD, TOKEN_PARAM_PATH, SECRET_EXT_PORT, BOT_TOKEN
-from .user import TelegramUser
+import config as cfg
+import user as usr
 
 logger = logging.getLogger()
 logger.setLevel('INFO')
 
-BOT_APP = 'BOT_APP: '
+APP = 'BOT_APP: '
 
 
 def create_user(data: dict):
@@ -23,7 +23,7 @@ def create_user(data: dict):
     Returns:
         user: TelegramUser instance
     """
-    user = TelegramUser(id=data['from']['id'],
+    user = usr.TelegramUser(id=data['from']['id'],
                         username= data['from']['username'],
                         first_name = data['from']['first_name'],
                         is_bot=data['from']['is_bot'],
@@ -33,7 +33,7 @@ def create_user(data: dict):
     return user
 
 
-def validate_user(user: TelegramUser, allowed_users=allowed_ids):
+def validate_user(user: usr.TelegramUser, allowed_users=cfg.allowed_ids):
     """
     Validates TelegramUser instance. Checks whether lambda handler should act on the user.
 
@@ -59,57 +59,44 @@ def parse_text():
 
 def reply_user(chat_id: int, reply_message: str):
     """
-    Wrapper function that responds a message to TelegramUser.
+    Prepares bot token, api endpoint, then performs a POST request to Telegram API.
 
     Params:
-        chat_id:       int, chat_id of the user
-        reply_message: str, message to reply to the user
+        chat_id:       int, chat_id of user
+        reply_message: str, text message to reply to the user
 
     Returns:
-        True:  bool, if no issue found
-        False: bool, if telegram bot token is None. i.e. not retrieved.
+        response:  json, if POST request is performed
+        False:     bool, if telegram bot token is None. i.e. not retrieved.
     """
     token = get_bot_credentials()
     if token is None:
-        logger.info(f"{BOT_APP}Invalid Token")
+        logger.error(f'{APP}Error. Invalid Token={token}')
         return False
+
     reply_url = get_bot_url(token)
-    response = chat_user(chat_id, reply_message, reply_url)
-    return True
 
+    params = {'chat_id': chat_id, 'text': reply_message}
+    response = requests.post(reply_url, json=params)
 
-def chat_user(chat_id: int, reply_text: str, chat_url):
-    """
-    Performs a POST request to Telegram API.
-
-    Params:
-        chat_id:    int, chat_id of the user
-        reply_text: str, text message to reply to the user
-        chat_url:   str, Telegram API endpoint
-
-    Returns:
-        json:     json response from Telegram API
-    """
-    params = {"chat_id": chat_id, "text": reply_text}
-    response = requests.post(chat_url, json=params)
     return response.json()
 
 
 def get_bot_url(credentials):
     """
-    Construct Telegram API URL based on Bot's credentials.
+    Construct Telegram API URL based on Bot credentials.
 
     Params:
-        credentials: str, Telegram Bot's private token
+        credentials: str, Telegram Bot private token
 
     Returns:
         url: str, Telegram API endpoint
     """
-    url = f'{BOT_BASE_URL}{credentials}/{BOT_METHOD}'
+    url = f'{cfg.BOT_BASE_URL}{credentials}/{cfg.BOT_METHOD}'
     return url
 
 
-def get_bot_credentials(token_name=BOT_TOKEN):
+def get_bot_credentials(token_name=cfg.BOT_TOKEN_NAME):
     """
     Get secret Telegram Bot Token/Credential from AWS Parameter Store.
     Uses AWS Parameters and Secrets Lambda Extension, that allows caching.
@@ -121,8 +108,8 @@ def get_bot_credentials(token_name=BOT_TOKEN):
         secret: str, secret token from AWS Parameter Store
         None:   None, if token_name is not correct
     """
-    secret_ext_endpoint = (f'http://localhost:{SECRET_EXT_PORT}/systemsmanager/parameters/'
-                           f'get?name={TOKEN_PARAM_PATH}&withDecryption=true')
+    secret_ext_endpoint = (f'http://localhost:{cfg.SECRET_EXT_PORT}/systemsmanager/parameters/'
+                           f'get?name={cfg.TOKEN_PARAM_PATH}&withDecryption=true')
     request_ssm = urllib.request.Request(secret_ext_endpoint)
     request_ssm.add_header('X-Aws-Parameters-Secrets-Token', os.environ.get('AWS_SESSION_TOKEN'))
     resp = urllib.request.urlopen(request_ssm).read()
@@ -157,19 +144,19 @@ def lambda_handler(event: dict, context: object):
     try:
         ret = json.loads(event['body'])['message']
     except json.JSONDecodeError as e:
-        logger.error(f"{BOT_APP}Error parsing json: {e}")
+        logger.exception(f"{APP}Error parsing json: {e}")
         return {
             'statusCode': 400,
             "body": json.dumps({"message": "Error parsing json."})
         }
     except KeyError as e:
-        logger.error(f"{BOT_APP}Error. Key not found in json: {e}")
+        logger.exception(f"{APP}Error. Key not found in json: {e}")
         return {
             'statusCode': 400,
             "body": json.dumps({"message": "Error. Key not found in json."})
         }
     except Exception as e:
-        logger.error(f"{BOT_APP}Error. An unexpected error occurs: {e} ")
+        logger.exception(f"{APP}Error. An unexpected error occurs: {e} ")
         return {
             'statusCode': 400,
             "body": json.dumps({"message": "Error. An unexpected error occurs."})
@@ -179,8 +166,9 @@ def lambda_handler(event: dict, context: object):
     user = create_user(data)
 
     if validate_user(user):
-        logger.info(f"{BOT_APP}Valid user={user.first_name}, message={user.message}")
-        reply_user(user.chat_id, "Ok")
+        logger.info(f"{APP}Validated user={user.first_name}, message={user.message}")
+        if cfg.ENV == 'PROD':
+            reply_user(user.chat_id, "Ok")
 
     return {
         "statusCode": 200,
