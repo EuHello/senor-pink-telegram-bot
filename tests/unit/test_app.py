@@ -1,8 +1,10 @@
 import pytest
 import random
 
+from . import context
 from telegram_bot import app
 from telegram_bot.user import TelegramUser
+
 
 @pytest.fixture()
 def test_allowed_users():
@@ -146,4 +148,3 @@ class TestValidateUser:
 class TestGetBotUrl:
     def test_get_bot_url(self):
         assert app.get_bot_url('TOKEN') == 'https://api.telegram.org/botTOKEN/sendMessage'
-

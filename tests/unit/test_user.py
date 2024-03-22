@@ -1,7 +1,8 @@
 import pytest
-import random
 
+from . import context
 from telegram_bot.user import TelegramUser
+
 
 @pytest.fixture
 def user_valid_1():
