@@ -34,23 +34,23 @@ https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/s
 
 Initiate SAM directory and templates  
 ```bash
-sam init        # Initiate SAM directory and templates
+sam init                                  # Initiate SAM directory and templates
 ```
 
 Key AWS SAM commands for build, testing and deployment  
 ```bash
-sam validate    # Validates SAM template.yaml
-sam build       # Builds .aws-sam
+sam validate                               # Validates SAM template.yaml
+sam build --use-container                  # Builds .aws-sam, uses docker
 sam deploy --guided --profile <profile>    # Builds zip, deploy to S3 
 ```
 
 Local Testing - use after sam build
 ```bash
-sam local invoke -e events/event.json    # Invokes Lambda function with event json. Creates local Docker
-sam local start-api                      # Simulate local Api Gateway
+sam local invoke -e events/event.json     # Invokes Lambda function with event json. Creates local Docker
+sam local start-api                       # Simulate local Api Gateway
 
-sam sync --code --watch                  # Local changes are sync to cloud
-sam sync --no-watch                      # Stop sync
+sam sync --code --watch                   # Local changes are sync to cloud
+sam sync --no-watch                       # Stop sync
 ```
 
 Pulling logs from AWS
