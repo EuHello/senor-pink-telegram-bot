@@ -44,16 +44,29 @@ sam build --use-container                  # Builds .aws-sam, uses docker
 sam deploy --guided --profile <profile>    # Builds zip, deploy to S3 
 ```
 
-Local Testing - use after sam build
+Local Testing - use after sam build  
+Invokes Lambda function with event json, uses Docker.  
 ```
-sam local invoke -e events/event.json     # Invokes Lambda function with event json. Creates local Docker
-sam local start-api                       # Simulate local Api Gateway
+sam local invoke --env-vars env.json --event events/event.json --profile <profile>
+```
 
+Generate test json for sam local invoke  
+```
+sam local generate-event apigateway aws-proxy --stage DEV > event.json
+```
+
+Simulate API Gateway  
+```
+sam local start-api
+```
+
+Sync local developement changes to AWS
+```
 sam sync --code --watch                   # Local changes are sync to cloud
 sam sync --no-watch                       # Stop sync
 ```
 
-Pulling logs from AWS
+Pull logs from AWS
 ```
 sam logs -n <resource name> --stack-name <mystack>  
 ```
