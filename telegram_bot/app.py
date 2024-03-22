@@ -23,12 +23,13 @@ def create_user(data: dict):
     Returns:
         user: TelegramUser instance
     """
-    user = TelegramUser(user_id=data['from']['id'],
-                        username = data['from']['username'],
+    user = TelegramUser(id=data['from']['id'],
+                        username= data['from']['username'],
                         first_name = data['from']['first_name'],
-                        is_bot=data['from']['is_bot'])
-    user.set_chat_id(data['chat']['id'])
-    user.set_message(data['text'])
+                        is_bot=data['from']['is_bot'],
+                        chat_id=data['chat']['id'],
+                        message=data['text'],
+                        )
     return user
 
 
@@ -40,15 +41,14 @@ def validate_user(user: TelegramUser, allowed_users=allowed_ids):
         user: TelegramUser instance
 
     Returns:
-        True:  bool, if user is valid
-        False: bool, otherwise
+        True:  bool, user is validated and in allowed list
+        False: bool, if otherwise
     """
-    print(allowed_users)
-    if user.is_bot:
+    if not user.validate_self():
         return False
-    if user.chat_id < 0:
+    if user.is_bot or user.chat_id < 0:
         return False
-    if user.uid in allowed_users:
+    if user.id in allowed_users:
         return True
     return False
 
