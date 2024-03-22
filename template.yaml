@@ -49,12 +49,12 @@ Resources:
   FeedingRecords:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: feedings
+      TableName: feeds
       AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: N
+      - AttributeName: date
+        AttributeType: S
       KeySchema:
-        - AttributeName: id
+        - AttributeName: date
           KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
@@ -70,3 +70,6 @@ Outputs:
   TelegramBot:
     Description: Telegram Bot Lambda Function ARN
     Value: !GetAtt TelegramBot.Arn
+  FeedingRecords:
+    Description: DynamoDB that keeps records.
+    Value: !GetAtt FeedingRecords.Arn
