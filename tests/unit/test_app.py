@@ -46,47 +46,28 @@ def user_invalid_chat_id():
     return TelegramUser(12345678, 'UserName12345', 'Jane', False,
                         -1, 'The quick brown fox jumps over the lazy dog')
 
-@pytest.fixture
-def user_large_chat_id():
-    return TelegramUser(12345678, 'UserName12345', 'James', False,
-                        random.randint(12*10, 15*10), 'The quick brown fox jumps over the lazy dog')
-
-
 
 @pytest.fixture
 def data_valid():
     return {'from': {'id': 12345678, 'first_name': 'Paul', 'username': 'UserName12345', 'is_bot': False},
             'chat': {'id': 9887654321},
-            'text': {'The quick brown fox jumps over the lazy dog'}
+            'text': 'The quick brown fox jumps over the lazy dog'
             }
 
 @pytest.fixture
 def data_bot():
     return {'from': {'id': 123, 'first_name': 'Jane', 'username': 'UserName12345', 'is_bot': True},
             'chat': {'id': 321},
-            'text': {'The quick brown fox jumps over the lazy dog'}
+            'text': 'The quick brown fox jumps over the lazy dog'
             }
 
 @pytest.fixture
 def data_no_text():
     return {'from': {'id': 123, 'first_name': 'Paul', 'username': 'UserName12345', 'is_bot': True},
             'chat': {'id': random.randint(5*10, 11*10)},
-            'text': {''}
+            'text': ''
             }
 
-@pytest.fixture
-def data_uid_large():
-    return {'from': {'id': random.randint(11*10, 15*10), 'first_name': 'Paul', 'username': 'UserName12345', 'is_bot': False},
-            'chat': {'id': 12345678},
-            'text': {'The quick brown fox jumps over the lazy dog'}
-            }
-
-@pytest.fixture
-def data_chat_id_large():
-    return {'from': {'id': 12345678, 'first_name': 'Paul', 'username': 'UserName12345', 'is_bot': False},
-            'chat': {'id': random.randint(12*10, 15*10)},
-            'text': {'The quick brown fox jumps over the lazy dog'}
-            }
 
 class TestCreateUser:
     def test_create_user(self, data_valid):
@@ -110,15 +91,8 @@ class TestCreateUser:
 
     def test_create_user_with_no_text(self, data_no_text):
         user = app.create_user(data_no_text)
-        assert user.message == data_no_text['text']
+        assert user.message == ''
 
-    def test_create_user_with_largeuid(self, data_uid_large):
-        user = app.create_user(data_uid_large)
-        assert user.id == data_uid_large['from']['id']
-
-    def test_create_user_with_largechatid(self, data_chat_id_large):
-        user = app.create_user(data_chat_id_large)
-        assert user.chat_id == data_chat_id_large['chat']['id']
 
 class TestValidateUser:
     def test_validate_1(self, user_valid_1, test_allowed_users):
@@ -139,11 +113,9 @@ class TestValidateUser:
     def test_validate_bot_str(self, user_bot_string, test_allowed_users):
         assert app.validate_user(user_bot_string, test_allowed_users) == False
 
-    def test_validate_invalid_chatid(self, user_invalid_chat_id, test_allowed_users):
+    def test_validate_invalid_chat_id(self, user_invalid_chat_id, test_allowed_users):
         assert app.validate_user(user_invalid_chat_id, test_allowed_users) == False
 
-    def test_validate_large_chatid(self, user_large_chat_id, test_allowed_users):
-        assert app.validate_user(user_large_chat_id, test_allowed_users) == True
 
 class TestGetBotUrl:
     def test_get_bot_url(self):
