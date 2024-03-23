@@ -1,6 +1,6 @@
-# About
+# Python Telegram milk bot
 A Telegram bot that records babies' milk feedings for allowed users.  
-Essentially, a bot that reads chat messages, writes to DB, and responds.  
+User speaks to the bot, example "12pm 120ml milk". Bot records it and informs user how much milk drank for the day.  
 Named after the legendary Señor Pink from One Piece.  
 
 ## Infrastructure 
@@ -17,13 +17,23 @@ https://aws.amazon.com/lambda/
 Telegram Bot/Server -> AWS API gateway -> AWS Lambda -> AWS DynamoDB  
 
 
-## Prerequisites and Key Tooling
-- Lambda function <- Python 3    
-- AWS SAM Template
-- CLI - AWS CLI, AWS SAM CLI
+## Description of key components
+| Resources                                   | Description                                                                                                            |
+|---------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| AWS Lambda function                         | Serverless function written in Python. This will contain all functions for the Telegram Bot                            |
+| AWS API Gateway                             | API gateway to Lambda                                                                                                  |
+| AWS DynamoDB                                | NoSQL Database. We will be using composite primary keys                                                                |
+| AWS Lambda Authenticator                    | WIP                                                                                                                    |
+| AWS Parameter Store                         | Stores secret key-values, via Parameter Store Console. i.e. Telegram Bot Token                                         |
+| AWS Parameters and Secrets Lambda Extension | Extension allows Lambda to retrieve secret keys from AWS Parameter Store. Uses cache, which reduces API calls and cost |
+| AWS IAM                                     | Permissions                                                                                                            |
+| AWS SAM (Serverless Application Model)      | All the above are written in SAM, template.yaml, environment variables too. Configurations are in samconfig.toml       |
+
+
+Other Tools
+- Command Line Interfaces used: AWS CLI and SAM CLI
 - Docker - for local testing
-- AWS IAM - permissions
-- AWS Parameter Store - for parameter and secrets
+
 
 
 ## AWS SAM
@@ -32,58 +42,13 @@ https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/w
 https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification.html  
 
 
-Initiate SAM directory and templates  
-```
-sam init                                  # Initiate SAM directory and templates
-```
-
-Key AWS SAM commands for build, testing and deployment  
-```
-sam validate                               # Validates SAM template.yaml
-sam build --use-container                  # Builds .aws-sam, uses docker
-sam deploy --guided --profile <profile>    # Builds zip, deploy to S3 
-```
-
-Local Testing - use after sam build  
-Invokes Lambda function with event json, uses Docker.  
-```
-sam local invoke --env-vars env.json --event events/event.json --profile <profile>
-```
-
-Generate test json for sam local invoke  
-```
-sam local generate-event apigateway aws-proxy --stage DEV > event.json
-```
-
-Simulate API Gateway  
-```
-sam local start-api
-```
-
-Sync local developement changes to AWS
-```
-sam sync --code --watch                   # Local changes are sync to cloud
-sam sync --no-watch                       # Stop sync
-```
-
-Pull logs from AWS
-```
-sam logs -n <resource name> --stack-name <mystack>  
-```
-
-View Endpoints and Resources
-```
-sam list endpoints --region <region> --profile <profile>
-sam list resources --region <region> --profile <profile>
-```
-
 ## Telegram Bot
 There are two options to communicate with Telegram bot api.  
 1. Long Polling  
-2. Web-hook - this is the preferred option due to Lambda.  
+2. Web-hook - this is my preferred option due to Lambda.  
 
 ### Setting up Bot
-https://core.telegram.org/bots/features#botfather  
+Speak to Botfather https://core.telegram.org/bots/features#botfather  
 
 ### Web-hook Api
 Preferred option with AWS Lambda.  
@@ -110,60 +75,62 @@ Unit tests with pytest
 pytest
 ```
 
+## SAM CLI commands
+Initiate SAM directory and templates  
+```
+sam init           # Initiate SAM directory and templates
+```
+
+Key AWS SAM commands for build, testing and deployment  
+```
+sam validate       # Validates SAM template.yaml
+sam build          # Builds .aws-sam, uses docker
+
+sam deploy         # Builds zip, deploy to S3. 
+                   # useful options: --guided --profile <profile>
+```
+
+Local Testing - use after `sam build`. Invokes Lambda function with event json, uses Docker.  
+```
+sam local invoke     # useful options: --env-vars env.json --event events/event.json --profile <profile>
+```
+
+Generate test json for sam local invoke  
+```
+sam local generate-event apigateway aws-proxy --stage DEV > event.json
+```
+
+Simulate API Gateway  
+```
+sam local start-api
+```
+
+Sync local dev changes to AWS
+```
+sam sync --code --watch     # Local changes are sync to cloud
+sam sync --no-watch         # Stop sync
+```
+
+Pull logs from AWS
+```
+sam logs -n <resource name> --stack-name <mystack>      # useful options: --tail -s '5min ago'
+```
+
+View Endpoints and Resources
+```
+sam list endpoints      # useful opions: --region <region> --profile <profile>
+sam list resources
+```
+
 ## Odds and Ends
-### AWS Parameter Store
-Add Telegram bot token as a secret (or secure secret key) via AWS Parameter Store console.
 
-### Policy to allow AWS Lambda function to read from Parameter Store 
-On SAM Template, add policy template for SSMParameterReadPolicy.  
-```yaml
-Resources:
-  ResourceName:
-    Properties:
-      Policies:
-        - SSMParameterReadPolicy:
-            ParameterName: Token
-```
-https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html  
-https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-template-list.html#ssm-parameter-read-policy  
-https://stackoverflow.com/questions/53361664/aws-sam-managed-policy-for-ssm-get-parameter  
-
-
-### AWS Parameters and Secrets Lambda Extension
-Extension allows AWS Lambda to pull secret keys from AWS Parameter Store.  
-Extension uses cache, which reduces API calls, reduces cost.  
-Create Extension layer in SAM Template.  
-```yaml
-Resources:
-  ResourceName:
-    Properties:
-      Layers:
-        - arn:aws:lambda:ap-southeast-2:665172237481:layer:AWS-Parameters-and-Secrets-Lambda-Extension:11
-```
-https://docs.aws.amazon.com/systems-manager/latest/userguide/ps-integration-lambda-extensions.html  
-https://community.aws/posts/parameters-and-secrets-lambda-extension-with-python  
-https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_lambda.html#retrieving-secrets_lambda_ARNs  
-
-### Logging with AWS CloudWatch console
+### AWS CloudWatch console
 https://docs.aws.amazon.com/lambda/latest/dg/python-logging.html#python-logging-cwconsole  
 
-### Set Log Retention with AWS CloudWatch console
+### Log Retention with AWS CloudWatch console
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html#SettingLogRetention  
 
 ### Change Log timezone in AWS CloudWatch console
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html#ViewingLogData  
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/modify_graph_date_time.html#set-time-zone-Cloudwatch-graph  
 
-
-### Setup Environment Variables
-To toggle between production and development environments. e.g. ENV = 'Dev' or ENV = 'PROD'.
-This can be done by creating an environment variable in SAM Template.
-```yaml
-Resources:
-  ResourceName:
-    Properties:
-      Environment:
-        Variables:
-          KEY: file.txt
-```
-https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-sam
