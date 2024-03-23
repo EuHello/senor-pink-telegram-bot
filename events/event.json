@@ -1,5 +1,5 @@
 {
-  "body": "{\"update_id\":10000,\"message\":{\"date\":1441645532,\"chat\":{\"last_name\":\"TestLastname\",\"id\":1111111,\"type\":\"private\",\"first_name\":\"TestFirstname\",\"username\":\"Testusername\"},\"message_id\":1365,\"from\":{\"last_name\":\"TestLastname\",\"id\":1111111,\"first_name\":\"TestFirstname\",\"username\":\"Testusername\",\"is_bot\":false},\"text\":\"/start\"}}",
+  "body": "{\"update_id\":10000,\"message\":{\"date\":1441645532,\"chat\":{\"last_name\":\"TestLastname\",\"id\":1111111,\"type\":\"private\",\"first_name\":\"TestFirstname\",\"username\":\"Testusername\"},\"message_id\":1365,\"from\":{\"last_name\":\"TestLastname\",\"id\":1111111,\"first_name\":\"TestFirstname\",\"username\":\"Testusername\",\"is_bot\":false},\"text\":\"/start 12.10pm 100ml\"}}",
   "resource": "/{proxy+}",
   "path": "/path/to/resource",
   "httpMethod": "POST",
