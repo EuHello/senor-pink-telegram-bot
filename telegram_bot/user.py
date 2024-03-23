@@ -7,6 +7,12 @@ class TelegramUser:
         self.chat_id = chat_id
         self.message = message
 
+    def set_id(self, id: int):
+        self.id = id
+
+    def set_is_bot(self, is_bot: bool):
+        self.is_bot = is_bot
+
     def set_chat_id(self, chat_id: int):
         self.chat_id = chat_id
 
