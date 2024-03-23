@@ -249,6 +249,3 @@ $RECYCLE.BIN/
 
 # Custom config file
 config.py
-
-# Custom bash scripts
-*.sh
