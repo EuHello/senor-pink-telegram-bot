@@ -1,4 +1,4 @@
 #!/bin/bash
 # config.sh
 
-MYPROFILE="admin"
+MYPROFILE="MYPROFILE"
