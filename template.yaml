@@ -13,6 +13,7 @@ Globals:
     # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
     LoggingConfig:
       LogFormat: JSON
+
 Resources:
   TelegramBot:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -30,7 +31,7 @@ Resources:
       Runtime: python3.10
       Timeout: 60
       Environment:
-        Variables:
+        Variables: # Environment Variables: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-sam
           TABLE_NAME: !Ref FeedingRecords
           ENV: PROD
       Architectures:
@@ -44,18 +45,31 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: BOT_TOKEN
+            # Policy to allow AWS Lambda function to read from Parameter Store
+            # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+            # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-template-list.html#ssm-parameter-read-policy
+            # https://stackoverflow.com/questions/53361664/aws-sam-managed-policy-for-ssm-get-parameter
       Layers:
         - arn:aws:lambda:ap-southeast-2:665172237481:layer:AWS-Parameters-and-Secrets-Lambda-Extension:11
+        # AWS Parameters and Secrets Lambda Extension
+        # https://docs.aws.amazon.com/systems-manager/latest/userguide/ps-integration-lambda-extensions.html
+        # https://community.aws/posts/parameters-and-secrets-lambda-extension-with-python
+        # https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_lambda.html#retrieving-secrets_lambda_ARNs
+
   FeedingRecords:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: feeds
+      TableName: feedings
       AttributeDefinitions:
       - AttributeName: date
+        AttributeType: S
+      - AttributeName: timestamp
         AttributeType: S
       KeySchema:
         - AttributeName: date
           KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
