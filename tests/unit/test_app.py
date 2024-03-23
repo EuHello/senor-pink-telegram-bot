@@ -5,17 +5,6 @@ from telegram_bot import app
 from telegram_bot.user import TelegramUser
 
 
-@pytest.fixture()
-def test_allowed_users():
-    return [12345678, 567890]
-
-
-@pytest.fixture()
-def generate_user():
-    return TelegramUser(12345678, 'UserName123', 'Paul Atreides', False,
-                        987654321, 'The quick brown fox jumps over the lazy dog')
-
-
 @pytest.fixture
 def generate_data():
     return {'from': {'id': 12345678, 'first_name': 'Paul', 'username': 'UserName12345', 'is_bot': False},
@@ -46,37 +35,6 @@ class TestCreateUser:
         data['text'] = ''
         user = app.create_user(data)
         assert user.message == ''
-
-
-class TestValidateUser:
-    def test_validate_1(self, generate_user, test_allowed_users):
-        user = generate_user
-        assert app.validate_user(user, test_allowed_users) is True
-
-    def test_validate_2(self, generate_user, test_allowed_users):
-        user = generate_user
-        user.set_id(567890)
-        assert app.validate_user(user, test_allowed_users) is True
-
-    def test_validate_user_not_in_list(self, generate_user, test_allowed_users):
-        user = generate_user
-        user.set_id(9999)
-        assert app.validate_user(user, test_allowed_users) is False
-
-    def test_validate_bot(self, generate_user, test_allowed_users):
-        user = generate_user
-        user.set_is_bot(True)
-        assert app.validate_user(user, test_allowed_users) is False
-
-    def test_validate_bot_none(self, generate_user, test_allowed_users):
-        user = generate_user
-        user.set_is_bot(None)
-        assert app.validate_user(user, test_allowed_users) is False
-
-    def test_validate_bot_string(self, generate_user, test_allowed_users):
-        user = generate_user
-        user.set_is_bot('False')
-        assert app.validate_user(user, test_allowed_users) is False
 
 
 class TestGetBotUrl:

@@ -1,3 +1,6 @@
+import config as cfg
+
+
 class TelegramUser:
     def __init__(self, id: int, username: str, first_name: str, is_bot: bool, chat_id: int, message: str):
         self.id = id
@@ -19,9 +22,21 @@ class TelegramUser:
     def set_message(self, message: str):
         self.message = message
 
-    def validate_self(self):
+    def validate_self(self, allowed_users=cfg.allowed_ids):
+        """
+        Validates TelegramUser instance.
+
+        Params:
+            user: TelegramUser instance
+            allowed_users: list, allowed user ids from config
+
+        Returns:
+            True:  bool, user is validated and in the allowed list
+            False: bool, user is not validated
+        """
         return (
                 isinstance(self.id, int) and isinstance(self.username, str) and
                 isinstance(self.first_name, str) and isinstance(self.is_bot, bool) and
-                isinstance(self.chat_id, int) and isinstance(self.message, str)
-                )
+                isinstance(self.chat_id, int) and isinstance(self.message, str) and
+                not self.is_bot and (self.id in allowed_users)
+        )

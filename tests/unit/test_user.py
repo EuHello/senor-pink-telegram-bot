@@ -10,6 +10,11 @@ def generate_user():
                         987654321, 'The quick brown fox jumps over the lazy dog')
 
 
+@pytest.fixture()
+def test_allowed_users():
+    return [12345678, 567890]
+
+
 class TestSetId:
     def test_set_id(self, generate_user):
         new_id = 321
@@ -47,24 +52,39 @@ class TestSetMessage:
 
 
 class TestValidateSelf:
-    def test_validate_self(self, generate_user):
+    def test_first_valid_id(self, generate_user, test_allowed_users):
         user = generate_user
-        assert user.validate_self() is True
+        assert user.validate_self(test_allowed_users) is True
 
-    def test_bot_none(self, generate_user):
+    def test_second_valid_id(self, generate_user, test_allowed_users):
         user = generate_user
-        assert user.validate_self() is True
+        user.set_id(567890)
+        assert user.validate_self(test_allowed_users) is True
+
+    def test_user_not_in_list(self, generate_user, test_allowed_users):
+        user = generate_user
+        user.set_id(9999)
+        assert user.validate_self(test_allowed_users) is False
+
+    def test_bot(self, generate_user, test_allowed_users):
+        user = generate_user
+        user.set_is_bot(True)
+        assert user.validate_self(test_allowed_users) is False
+
+    def test_bot_none(self, generate_user, test_allowed_users):
+        user = generate_user
+        assert user.validate_self(test_allowed_users) is True
         user.set_is_bot(None)
-        assert user.validate_self() is False
+        assert user.validate_self(test_allowed_users) is False
 
-    def test_bot_string(self, generate_user):
+    def test_bot_string(self, generate_user, test_allowed_users):
         user = generate_user
-        assert user.validate_self() is True
+        assert user.validate_self(test_allowed_users) is True
         user.set_is_bot("False")
-        assert user.validate_self() is False
+        assert user.validate_self(test_allowed_users) is False
 
-    def test_message_object(self, generate_user):
+    def test_message_object(self, generate_user, test_allowed_users):
         user = generate_user
-        assert user.validate_self() is True
+        assert user.validate_self(test_allowed_users) is True
         user.set_message({'hello': 'world'})
-        assert user.validate_self() is False
+        assert user.validate_self(test_allowed_users) is False

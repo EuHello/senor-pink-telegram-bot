@@ -35,30 +35,13 @@ def create_user(data: dict):
         user: TelegramUser instance
     """
     user = usr.TelegramUser(id=data['from']['id'],
-                            username= data['from']['username'],
-                            first_name = data['from']['first_name'],
+                            username=data['from']['username'],
+                            first_name=data['from']['first_name'],
                             is_bot=data['from']['is_bot'],
                             chat_id=data['chat']['id'],
                             message=data['text']
                             )
     return user
-
-
-def validate_user(user: usr.TelegramUser, allowed_users=cfg.allowed_ids):
-    """
-    Validates TelegramUser instance.
-
-    Params:
-        user: TelegramUser instance
-        allowed_users: list, allowed user ids from config
-
-    Returns:
-        True:  bool, user is validated and in allowed list
-        False: bool, if otherwise
-    """
-    if (not user.is_bot) and user.validate_self() and (user.id in allowed_users):
-        return True
-    return False
 
 
 def reply_user(chat_id: int, reply_message: str):
@@ -143,6 +126,7 @@ def load_amount_ml(text):
         return int(amount)
     return -1
 
+
 def get_local_datetime():
     """
     Provides local date, based on specified timezone, not the server timezone.
@@ -191,30 +175,17 @@ def lambda_handler(event: dict, context: object):
     logger.info(f"{APP}Running Environment={ENV}")
 
     try:
-        ret = json.loads(event['body'])['message']
-    except json.JSONDecodeError as e:
-        logger.exception(f"{APP}Error parsing json: {e}")
-        return {
-            'statusCode': 400,
-            "body": json.dumps({"message": "Error parsing json."})
-        }
-    except KeyError as e:
-        logger.exception(f"{APP}Error. Key not found in json: {e}")
-        return {
-            'statusCode': 400,
-            "body": json.dumps({"message": "Error. Key not found in json."})
-        }
+        data = json.loads(event['body'])['message']
     except Exception as e:
-        logger.exception(f"{APP}Error. An unexpected error occurs: {e} ")
+        logger.exception(f"{APP}An unexpected error occurs: {e} ")
         return {
             'statusCode': 400,
             "body": json.dumps({"message": "Error. An unexpected error occurs."})
         }
 
-    data = json.loads(event['body'])['message']
     user = create_user(data)
 
-    if validate_user(user):
+    if user.validate_self():
         logger.info(f"{APP}Validated user={user.first_name}, message={user.message}")
         amt = load_amount_ml(user.message)
         print(f'amount found is {amt}')
@@ -225,7 +196,7 @@ def lambda_handler(event: dict, context: object):
         if action == "Record Milk" and ENV == 'PROD':
             records = rec.Records(boto3.resource('dynamodb', region_name='ap-southeast-2'))
             records.init_table(TABLE_NAME)
-            records.add_record(type="MILK", amount=amt, message=user.message, author=user.first_name)
+            records.add_record(category="MILK", amount=amt, message=user.message, author=user.first_name)
 
         if ENV == 'PROD':
             reply_user(user.chat_id, "Ok")
