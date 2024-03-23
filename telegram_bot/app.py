@@ -10,19 +10,18 @@ import re
 
 import config as cfg
 import user as usr
+import record as rec
 
 logger = logging.getLogger()
 logger.setLevel('INFO')
 
 APP = 'BOT_APP: '
+TABLE_NAME = 'feedings'
 
 if os.environ.get('ENV') is None:
     ENV = cfg.ENV
 else:
     ENV = os.environ['ENV']
-
-dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-2')
-table = dynamodb.Table('feeds')
 
 
 def create_user(data: dict):
@@ -144,7 +143,7 @@ def load_amount_ml(text):
         return int(amount)
     return -1
 
-def get_local_date():
+def get_local_datetime():
     """
     Provides local date, based on specified timezone, not the server timezone.
     Params: n/a
@@ -154,7 +153,7 @@ def get_local_date():
     """
     today = datetime.now()
     user_dt = today.astimezone(ZoneInfo('Asia/Singapore'))
-    return user_dt.date()
+    return user_dt.date(), user_dt.time()
 
 
 def get_action(amt):
@@ -165,7 +164,7 @@ def get_action(amt):
         amt: int, the amount of milk in units e.g. millimetres
 
     Returns:
-        "Record Milk": str, the action to record milk amount
+        Action: str, the next action to take for Lambda handler
     """
     if amt > 0:
         return "Record Milk"
@@ -189,7 +188,7 @@ def lambda_handler(event: dict, context: object):
         API Gateway Lambda Proxy Output Format: dict
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
-    logger.info(f"{APP}Running Environment = {ENV}")
+    logger.info(f"{APP}Running Environment={ENV}")
 
     try:
         ret = json.loads(event['body'])['message']
@@ -220,27 +219,13 @@ def lambda_handler(event: dict, context: object):
         amt = load_amount_ml(user.message)
         print(f'amount found is {amt}')
 
-        date = get_local_date()
-        print(date)
         action = get_action(amt)
         print(f'action is {action}')
+        print(f'TABLE_NAME={TABLE_NAME}')
         if action == "Record Milk" and ENV == 'PROD':
-            res = table.put_item(
-                Item={
-                    'date': str(date),
-                    'type': 'Milk',
-                    'amount': amt,
-                    'text': user.message,
-                    'author': user.first_name
-                })
-            print(f'DB put.. res = {res}')
-
-        # https://docs.aws.amazon.com/code-library/latest/ug/python_3_dynamodb_code_examples.html
-        # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/programming-with-python.html
-
-        # https://aws.amazon.com/blogs/database/implement-auto-increment-with-amazon-dynamodb/
-        # https://medium.com/@dwight.lindquist/aws-sam-setup-for-lambda-api-gateway-and-dynamodb-542c46f1ff76
-        # https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-dynamo-db.html#http-api-dynamo-db-create-routes
+            records = rec.Records(boto3.resource('dynamodb', region_name='ap-southeast-2'))
+            records.init_table(TABLE_NAME)
+            records.add_record(type="MILK", amount=amt, message=user.message, author=user.first_name)
 
         if ENV == 'PROD':
             reply_user(user.chat_id, "Ok")
