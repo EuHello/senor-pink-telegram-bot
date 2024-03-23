@@ -2,7 +2,6 @@ import pytest
 
 from . import context
 from telegram_bot import app
-from telegram_bot.user import TelegramUser
 
 
 @pytest.fixture
@@ -60,11 +59,24 @@ class TestLoadAmountMl:
         assert app.load_amount_ml(text) == 60
 
 
-class TestGetAction:
+class TestReadAction:
     def test_record_milk(self):
         amt = 100
-        assert app.get_action(amt) == "Record Milk"
+        assert app.read_action('', amt) == 'RECORD'
 
     def test_no_milk_amount(self):
         amt = -1
-        assert app.get_action(amt) != "Record Milk"
+        assert app.read_action('', amt) != 'RECORD'
+
+    def test_today(self):
+        assert app.read_action('Today ', -1) == 'TODAY'
+        assert app.read_action('today ', -1) == 'TODAY'
+        assert app.read_action('today', -1) == 'TODAY'
+
+    def test_yesterday(self):
+        assert app.read_action('Yesterday ', -1) == 'YESTERDAY'
+        assert app.read_action('yesterday ', -1) == 'YESTERDAY'
+        assert app.read_action('yesterday', -1) == 'YESTERDAY'
+
+    def test_unknown(self):
+        assert app.read_action('hello world ', -1) == 'UNKNOWN'

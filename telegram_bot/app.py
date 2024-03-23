@@ -4,8 +4,6 @@ import logging
 import os
 import requests
 import urllib.request
-from datetime import datetime
-from zoneinfo import ZoneInfo
 import re
 
 import config as cfg
@@ -127,20 +125,7 @@ def load_amount_ml(text):
     return -1
 
 
-def get_local_datetime():
-    """
-    Provides local date, based on specified timezone, not the server timezone.
-    Params: n/a
-
-    Returns:
-        date: datetime date, this comes in format YYYY-MM-DD.
-    """
-    today = datetime.now()
-    user_dt = today.astimezone(ZoneInfo('Asia/Singapore'))
-    return user_dt.date(), user_dt.time()
-
-
-def get_action(amt):
+def read_action(message, amt):
     """
     Gives action based on params.
 
@@ -150,9 +135,15 @@ def get_action(amt):
     Returns:
         Action: str, the next action to take for Lambda handler
     """
+    msg = message.strip().upper()
     if amt > 0:
-        return "Record Milk"
-    return None
+        return 'RECORD'
+    elif msg == 'TODAY':
+        return 'TODAY'
+    elif msg == 'YESTERDAY':
+        return 'YESTERDAY'
+    else:
+        return 'UNKNOWN'
 
 
 def lambda_handler(event: dict, context: object):
@@ -190,16 +181,36 @@ def lambda_handler(event: dict, context: object):
         amt = load_amount_ml(user.message)
         print(f'amount found is {amt}')
 
-        action = get_action(amt)
+        action = read_action(user.message, amt)
         print(f'action is {action}')
-        print(f'TABLE_NAME={TABLE_NAME}')
-        if action == "Record Milk" and ENV == 'PROD':
+
+        if action != 'UNKNOWN':
+            print(f'TABLE_NAME={TABLE_NAME}')
             records = rec.Records(boto3.resource('dynamodb', region_name='ap-southeast-2'))
             records.init_table(TABLE_NAME)
-            records.add_record(category="MILK", amount=amt, message=user.message, author=user.first_name)
 
-        if ENV == 'PROD':
-            reply_user(user.chat_id, "Ok")
+            if action == 'RECORD' and ENV == 'PROD':
+                records.add_record(category="MILK", amount=amt, message=user.message, author=user.first_name)
+                reply_user(user.chat_id, "Recorded")
+
+            elif action == 'TODAY' and ENV == 'PROD':
+                print('Staring TODAY')
+                date_ = rec.get_date_action(action)
+                print(f'rec.get_date_action(action)={date_}')
+                if date_ is not None:
+                    results = records.query_records(date_)
+                    total_amount = 0
+                    consolidated_message = ''
+                    print(f'results={results}')
+                    for result in results:
+                        total_amount += result['amount']
+                        consolidated_message += (result['text'] + '\n')
+                    print(f'total_amount={total_amount}, consolidated_message={consolidated_message}')
+                    output = f'Total drank = {total_amount}ml\n{consolidated_message}'
+                    reply_user(user.chat_id, output)
+
+            elif ENV == 'PROD':
+                reply_user(user.chat_id, "Ok")
 
     return {
         "statusCode": 200,

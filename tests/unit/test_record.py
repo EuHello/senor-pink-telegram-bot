@@ -1,21 +1,27 @@
 import pytest
+from datetime import datetime, timedelta
 
 from . import context
 from telegram_bot import record
 
 
-class TestGetDateTimestamp:
-    def test_date_timestamp_type(self):
-        date, timestamp = record.get_date_timestamp()
-        assert isinstance(date, str)
-        assert isinstance(timestamp, str)
+class TestGenerateDateTimestamp:
+    def test_object_type(self):
+        date, timestamp = record.generate_date_timestamp()
+        assert type(date) is type(datetime.now().date())
+        assert type(timestamp) is type(datetime.now().time())
 
-    def test_date_format(self):
-        date, timestamp = record.get_date_timestamp()
-        sample_date = "2024-03-24"
-        assert len(date) == len(sample_date)
 
-    def test_time_format(self):
-        date, timestamp = record.get_date_timestamp()
-        sample_time = "HH:MM:SS.ssssss"
-        assert len(timestamp) == len(sample_time)
+class TestGetDateAction:
+    def test_action_today(self):
+        date_, _ = record.generate_date_timestamp()
+        assert record.get_date_action("TODAY") == date_
+        assert record.get_date_action("today") == date_
+
+    def test_action_yesterday(self):
+        date_, _ = record.generate_date_timestamp()
+        assert record.get_date_action("YESTERDAY") == (date_ - timedelta(days=1))
+        assert record.get_date_action("yesterday") == (date_ - timedelta(days=1))
+
+    def test_unknown_action(self):
+        assert record.get_date_action("Hello") is None
