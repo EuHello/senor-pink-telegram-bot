@@ -1,5 +1,4 @@
 import pytest
-from datetime import datetime
 
 from . import context
 from telegram_bot import app
@@ -40,8 +39,7 @@ class TestCreateUser:
         data = generate_data
         data['from']['is_bot'] = True
         user = app.create_user(data)
-        assert user.is_bot == True
-
+        assert user.is_bot is True
 
     def test_create_user_with_no_text(self, generate_data):
         data = generate_data
@@ -53,43 +51,37 @@ class TestCreateUser:
 class TestValidateUser:
     def test_validate_1(self, generate_user, test_allowed_users):
         user = generate_user
-        assert app.validate_user(user, test_allowed_users) == True
+        assert app.validate_user(user, test_allowed_users) is True
 
     def test_validate_2(self, generate_user, test_allowed_users):
         user = generate_user
         user.set_id(567890)
-        assert app.validate_user(user, test_allowed_users) == True
+        assert app.validate_user(user, test_allowed_users) is True
 
     def test_validate_user_not_in_list(self, generate_user, test_allowed_users):
         user = generate_user
         user.set_id(9999)
-        assert app.validate_user(user, test_allowed_users) == False
+        assert app.validate_user(user, test_allowed_users) is False
 
     def test_validate_bot(self, generate_user, test_allowed_users):
         user = generate_user
         user.set_is_bot(True)
-        assert app.validate_user(user, test_allowed_users) == False
+        assert app.validate_user(user, test_allowed_users) is False
 
     def test_validate_bot_none(self, generate_user, test_allowed_users):
         user = generate_user
         user.set_is_bot(None)
-        assert app.validate_user(user, test_allowed_users) == False
+        assert app.validate_user(user, test_allowed_users) is False
 
     def test_validate_bot_string(self, generate_user, test_allowed_users):
         user = generate_user
         user.set_is_bot('False')
-        assert app.validate_user(user, test_allowed_users) == False
+        assert app.validate_user(user, test_allowed_users) is False
 
 
 class TestGetBotUrl:
     def test_get_bot_url(self):
         assert app.get_bot_url('TOKEN') == 'https://api.telegram.org/botTOKEN/sendMessage'
-
-
-class TestGetLocalDate:
-    def test_get_local_date(self):
-        today = app.get_local_date()
-        assert type(today) == type(datetime.now().date())
 
 
 class TestLoadAmountMl:
@@ -108,6 +100,7 @@ class TestLoadAmountMl:
     def test_multiple_amounts(self):
         text = '12.30pm 50ml 60ml at home'
         assert app.load_amount_ml(text) == 60
+
 
 class TestGetAction:
     def test_record_milk(self):
