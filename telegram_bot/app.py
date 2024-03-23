@@ -1,8 +1,12 @@
 import json
+import boto3
 import logging
 import os
 import requests
 import urllib.request
+from datetime import datetime
+from zoneinfo import ZoneInfo
+import re
 
 import config as cfg
 import user as usr
@@ -17,6 +21,10 @@ if os.environ.get('ENV') is None:
 else:
     ENV = os.environ['ENV']
 
+dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-2')
+table = dynamodb.Table('feeds')
+
+
 def create_user(data: dict):
     """
     Creates new TelegramUser instance, from data message.
@@ -28,37 +36,30 @@ def create_user(data: dict):
         user: TelegramUser instance
     """
     user = usr.TelegramUser(id=data['from']['id'],
-                        username= data['from']['username'],
-                        first_name = data['from']['first_name'],
-                        is_bot=data['from']['is_bot'],
-                        chat_id=data['chat']['id'],
-                        message=data['text'],
-                        )
+                            username= data['from']['username'],
+                            first_name = data['from']['first_name'],
+                            is_bot=data['from']['is_bot'],
+                            chat_id=data['chat']['id'],
+                            message=data['text']
+                            )
     return user
 
 
 def validate_user(user: usr.TelegramUser, allowed_users=cfg.allowed_ids):
     """
-    Validates TelegramUser instance. Checks whether lambda handler should act on the user.
+    Validates TelegramUser instance.
 
     Params:
         user: TelegramUser instance
+        allowed_users: list, allowed user ids from config
 
     Returns:
         True:  bool, user is validated and in allowed list
         False: bool, if otherwise
     """
-    if not user.validate_self():
-        return False
-    if user.is_bot or user.chat_id < 0:
-        return False
-    if user.id in allowed_users:
+    if (not user.is_bot) and user.validate_self() and (user.id in allowed_users):
         return True
     return False
-
-
-def parse_text():
-    return True
 
 
 def reply_user(chat_id: int, reply_message: str):
@@ -88,8 +89,7 @@ def reply_user(chat_id: int, reply_message: str):
 
 def get_bot_url(credentials):
     """
-    Construct Telegram API URL based on Bot credentials.
-    URL format: https://api.telegram.org/bot<token>/METHOD_NAME
+    Construct Telegram API URL based on Bot credentials. URL format: https://api.telegram.org/bot<token>/METHOD_NAME
 
     Params:
         credentials: str, Telegram Bot private token
@@ -124,7 +124,51 @@ def get_bot_credentials(token_name=cfg.BOT_TOKEN_NAME):
 
     if secret_name == token_name:
         return secret
+    return None
 
+
+def load_amount_ml(text):
+    """
+    Reads amount(millilitres) from text. E.g. for "12.30pm 200ml" it should return value 200.
+    Params:
+        text: str, text message content
+
+    Returns:
+        amount: int, the parsed amount from the text message. only the last matching amount is returned
+        -1    : int, if the amount is not found
+    """
+    pattern = re.compile(r'^.*\s(\d+)ml.*$')
+    m_ = pattern.match(text)
+    if m_ is not None:
+        amount = m_.group(1)
+        return int(amount)
+    return -1
+
+def get_local_date():
+    """
+    Provides local date, based on specified timezone, not the server timezone.
+    Params: n/a
+
+    Returns:
+        date: datetime date, this comes in format YYYY-MM-DD.
+    """
+    today = datetime.now()
+    user_dt = today.astimezone(ZoneInfo('Asia/Singapore'))
+    return user_dt.date()
+
+
+def get_action(amt):
+    """
+    Gives action based on params.
+
+    Params:
+        amt: int, the amount of milk in units e.g. millimetres
+
+    Returns:
+        "Record Milk": str, the action to record milk amount
+    """
+    if amt > 0:
+        return "Record Milk"
     return None
 
 
@@ -145,6 +189,7 @@ def lambda_handler(event: dict, context: object):
         API Gateway Lambda Proxy Output Format: dict
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
+    logger.info(f"{APP}Running Environment = {ENV}")
 
     try:
         ret = json.loads(event['body'])['message']
@@ -172,6 +217,31 @@ def lambda_handler(event: dict, context: object):
 
     if validate_user(user):
         logger.info(f"{APP}Validated user={user.first_name}, message={user.message}")
+        amt = load_amount_ml(user.message)
+        print(f'amount found is {amt}')
+
+        date = get_local_date()
+        print(date)
+        action = get_action(amt)
+        print(f'action is {action}')
+        if action == "Record Milk" and ENV == 'PROD':
+            res = table.put_item(
+                Item={
+                    'date': str(date),
+                    'type': 'Milk',
+                    'amount': amt,
+                    'text': user.message,
+                    'author': user.first_name
+                })
+            print(f'DB put.. res = {res}')
+
+        # https://docs.aws.amazon.com/code-library/latest/ug/python_3_dynamodb_code_examples.html
+        # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/programming-with-python.html
+
+        # https://aws.amazon.com/blogs/database/implement-auto-increment-with-amazon-dynamodb/
+        # https://medium.com/@dwight.lindquist/aws-sam-setup-for-lambda-api-gateway-and-dynamodb-542c46f1ff76
+        # https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-dynamo-db.html#http-api-dynamo-db-create-routes
+
         if ENV == 'PROD':
             reply_user(user.chat_id, "Ok")
 

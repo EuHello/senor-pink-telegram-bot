@@ -1,5 +1,5 @@
 import pytest
-import random
+from datetime import datetime
 
 from . import context
 from telegram_bot import app
@@ -77,15 +77,43 @@ class TestValidateUser:
 
     def test_validate_bot_string(self, generate_user, test_allowed_users):
         user = generate_user
-        user.set_is_bot("False")
-        assert app.validate_user(user, test_allowed_users) == False
-
-    def test_validate_invalid_chat_id(self, generate_user, test_allowed_users):
-        user = generate_user
-        user.set_chat_id(-1)
+        user.set_is_bot('False')
         assert app.validate_user(user, test_allowed_users) == False
 
 
 class TestGetBotUrl:
     def test_get_bot_url(self):
         assert app.get_bot_url('TOKEN') == 'https://api.telegram.org/botTOKEN/sendMessage'
+
+
+class TestGetLocalDate:
+    def test_get_local_date(self):
+        today = app.get_local_date()
+        assert type(today) == type(datetime.now().date())
+
+
+class TestLoadAmountMl:
+    def test_amount(self):
+        text = '12.30pm 100ml'
+        assert app.load_amount_ml(text) == 100
+
+    def test_amount_not_found(self):
+        text = '12.30pm'
+        assert app.load_amount_ml(text) == -1
+
+    def test_long_message(self):
+        text = '12.30pm 80ml at home'
+        assert app.load_amount_ml(text) == 80
+
+    def test_multiple_amounts(self):
+        text = '12.30pm 50ml 60ml at home'
+        assert app.load_amount_ml(text) == 60
+
+class TestGetAction:
+    def test_record_milk(self):
+        amt = 100
+        assert app.get_action(amt) == "Record Milk"
+
+    def test_no_milk_amount(self):
+        amt = -1
+        assert app.get_action(amt) != "Record Milk"
