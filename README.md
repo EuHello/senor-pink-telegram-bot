@@ -13,7 +13,7 @@ AWS Serverless Application Model (AWS SAM) with AWS Lambda
 https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html  
 https://aws.amazon.com/lambda/
 
-## Architecture  
+## Architecture
 Telegram Bot/Server -> AWS API gateway -> AWS Lambda -> AWS DynamoDB  
 
 
@@ -22,42 +22,45 @@ Telegram Bot/Server -> AWS API gateway -> AWS Lambda -> AWS DynamoDB
 |---------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
 | AWS Lambda function                         | Serverless function written in Python. This will contain all functions for the Telegram Bot                            |
 | AWS API Gateway                             | API gateway to Lambda                                                                                                  |
-| AWS DynamoDB                                | NoSQL Database. We will be using composite primary keys                                                                |
+| AWS DynamoDB                                | NoSQL Database. We will be using composite primary keys - a partition key and sort key                                 |
 | AWS Lambda Authenticator                    | WIP                                                                                                                    |
 | AWS Parameter Store                         | Stores secret key-values, via Parameter Store Console. i.e. Telegram Bot Token                                         |
 | AWS Parameters and Secrets Lambda Extension | Extension allows Lambda to retrieve secret keys from AWS Parameter Store. Uses cache, which reduces API calls and cost |
 | AWS IAM                                     | Permissions                                                                                                            |
 | AWS SAM (Serverless Application Model)      | All the above are written in SAM, template.yaml, environment variables too. Configurations are in samconfig.toml       |
 
-
 Other Tools
 - Command Line Interfaces used: AWS CLI and SAM CLI
 - Docker - for local testing
 
+## DynamoDB Schema
+Two main actions (1) write records e.g. drank milk 100ml. (2) get records by date, sorted by time. e.g. Drank total of 500ml today.   
+Hence, I chose to use composite primary keys of date(partition key), and a timestamp(sort key).  
+https://aws.amazon.com/blogs/database/choosing-the-right-dynamodb-partition-key/
 
-
-## AWS SAM
-Concepts  
+## AWS SAM Concepts
 https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html  
 https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification.html  
 
 
 ## Telegram Bot
-There are two options to communicate with Telegram bot api.  
-1. Long Polling  
-2. Web-hook - this is my preferred option due to Lambda.  
 
 ### Setting up Bot
 Speak to Botfather https://core.telegram.org/bots/features#botfather  
 
-### Web-hook Api
-Preferred option with AWS Lambda.  
+### API - Web-hook
+There are two options to communicate with Telegram bot api.  
+1. Long Polling  
+2. Web-hook - this is my preferred option due for serverless solution like Lambda.  
+
+Why Web-hook?
 1. Lower api calls compared to long polling, leading to more costs savings.    
-2. Smaller number of allowed users.  
-3. Requires open connection. AWS Lambda works better for event triggers (quick connections), rather than long polling (open connect fits AWS EC2 server better).    
+2. In my use case - smaller number of users via allowed user list.  
+3. Long polling requires open connection. AWS Lambda works better for event triggers, which are quick, short connections. 
+Long polling fits a server model like AWS EC2 better.    
 
 ### Web-hook with SSL  
-Recommended Option.  
+Telegram docs recommends using SSL authentication for web-hooks.
 https://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started-client-side-ssl-authentication.html  
 
 
