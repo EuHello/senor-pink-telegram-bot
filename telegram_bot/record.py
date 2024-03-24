@@ -4,8 +4,7 @@ from zoneinfo import ZoneInfo
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
-APP = 'BOT_APP: '
-
+logger = logging.getLogger(__name__)
 
 def generate_date_timestamp():
     """
@@ -70,8 +69,8 @@ class Records:
         try:
             response = self.table.query(KeyConditionExpression=Key("date").eq(date))
         except ClientError as e:
-            logging.error(
-                f"{APP}Error querying records. Table={self.table.name}.\n"
+            logger.error(
+                f"Error querying records. Table={self.table.name}.\n"
                 f"date={date}\n"
                 f"Error Code={e.response['Error']['Code']}\n"
                 f"Error={e.response['Error']['Message']}"
@@ -104,10 +103,10 @@ class Records:
                 }
             )
         except ClientError as e:
-            logging.error(
-                f"{APP}Error adding a record. Table={self.table.name}.\n"
+            (logger.error(
+                f"Error adding a record. Table={self.table.name}.\n"
                 f"date={date}\n"
                 f"Error Code={e.response['Error']['Code']}\n"
                 f"Error={e.response['Error']['Message']}"
-            )
+            ))
             raise

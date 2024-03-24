@@ -10,10 +10,8 @@ import config as cfg
 import user as usr
 import record as rec
 
-logger = logging.getLogger()
-logger.setLevel('INFO')
+logger = logging.getLogger(__name__)
 
-APP = 'BOT_APP: '
 TABLE_NAME = 'feedings'
 
 if os.environ.get('ENV') is None:
@@ -56,7 +54,7 @@ def reply_user(chat_id: int, reply_message: str):
     """
     token = get_bot_credentials()
     if token is None:
-        logger.error(f'{APP}Error. Invalid Token={token}')
+        logger.error(f'Error. Invalid Token={token}')
         return False
 
     reply_url = get_bot_url(token)
@@ -163,12 +161,12 @@ def lambda_handler(event: dict, context: object):
         API Gateway Lambda Proxy Output Format: dict
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
-    logger.info(f"{APP}Running Environment={ENV}")
+    logger.info(f"Running Environment={ENV}")
 
     try:
         data = json.loads(event['body'])['message']
     except Exception as e:
-        logger.exception(f"{APP}An unexpected error occurs: {e} ")
+        logger.exception(f"An unexpected error occurs: {e} ")
         return {
             'statusCode': 400,
             "body": json.dumps({"message": "Error. An unexpected error occurs."})
@@ -177,7 +175,7 @@ def lambda_handler(event: dict, context: object):
     user = create_user(data)
 
     if user.validate_self():
-        logger.info(f"{APP}Validated user={user.first_name}, message={user.message}")
+        logger.info(f"Validated user={user.first_name}, message={user.message}")
         amt = load_amount_ml(user.message)
         print(f'amount found is {amt}')
 
