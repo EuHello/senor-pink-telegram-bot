@@ -4,15 +4,15 @@ from . import context
 from telegram_bot import app
 
 
-@pytest.fixture
-def generate_data():
-    return {'from': {'id': 12345678, 'first_name': 'Paul', 'username': 'UserName12345', 'is_bot': False},
-            'chat': {'id': 9887654321},
-            'text': 'The quick brown fox jumps over the lazy dog'
-            }
-
-
 class TestCreateUser:
+
+    @pytest.fixture
+    def generate_data(self):
+        return {'from': {'id': 12345678, 'first_name': 'Paul', 'username': 'UserName12345', 'is_bot': False},
+                'chat': {'id': 9887654321},
+                'text': 'The quick brown fox jumps over the lazy dog'
+                }
+
     def test_create_user(self, generate_data):
         data = generate_data
         user = app.create_user(data)

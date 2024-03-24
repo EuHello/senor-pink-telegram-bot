@@ -10,11 +10,6 @@ def generate_user():
                         987654321, 'The quick brown fox jumps over the lazy dog')
 
 
-@pytest.fixture()
-def test_allowed_users():
-    return [12345678, 567890]
-
-
 class TestSetId:
     def test_set_id(self, generate_user):
         new_id = 321
@@ -52,6 +47,11 @@ class TestSetMessage:
 
 
 class TestValidateSelf:
+
+    @pytest.fixture()
+    def test_allowed_users(self):
+        return [12345678, 567890]
+
     def test_first_valid_id(self, generate_user, test_allowed_users):
         user = generate_user
         assert user.validate_self(test_allowed_users) is True
