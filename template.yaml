@@ -65,6 +65,7 @@ Resources:
         AttributeType: S
       - AttributeName: timestamp
         AttributeType: S
+      # https://aws.amazon.com/blogs/database/choosing-the-right-dynamodb-partition-key/
       KeySchema:
         - AttributeName: date
           KeyType: HASH
