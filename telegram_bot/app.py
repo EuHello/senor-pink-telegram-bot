@@ -2,13 +2,12 @@ import json
 import boto3
 import logging
 import os
-import requests
-import urllib.request
 import re
 
 import config as cfg
 import user as usr
 import record as rec
+import reply as rep
 
 logger = logging.getLogger(__name__)
 
@@ -38,71 +37,6 @@ def create_user(data: dict):
                             message=data['text']
                             )
     return user
-
-
-def reply_user(chat_id: int, reply_message: str):
-    """
-    Prepares bot token, api endpoint, then performs a POST request to Telegram API.
-
-    Params:
-        chat_id:       int, chat_id of user
-        reply_message: str, text message to reply to the user
-
-    Returns:
-        response:  json, if POST request is performed
-        False:     bool, if telegram bot token is None. i.e. not retrieved.
-    """
-    token = get_bot_credentials()
-    if token is None:
-        logger.error(f'Error. Invalid Token={token}')
-        return False
-
-    reply_url = get_bot_url(token)
-
-    params = {'chat_id': chat_id, 'text': reply_message}
-    response = requests.post(reply_url, json=params)
-
-    return response.json()
-
-
-def get_bot_url(credentials):
-    """
-    Construct Telegram API URL based on Bot credentials. URL format: https://api.telegram.org/bot<token>/METHOD_NAME
-
-    Params:
-        credentials: str, Telegram Bot private token
-
-    Returns:
-        url: str, Telegram API endpoint
-    """
-    url = f'{cfg.BOT_BASE_URL}{credentials}/{cfg.BOT_METHOD}'
-    return url
-
-
-def get_bot_credentials(token_name=cfg.BOT_TOKEN_NAME):
-    """
-    Get secret Telegram Bot Token/Credential from AWS Parameter Store.
-    Uses AWS Parameters and Secrets Lambda Extension, that allows caching.
-
-    Params:
-        token_name: str, name of the token, from config.py
-
-    Returns:
-        secret: str, secret token from AWS Parameter Store
-        None:   None, if token_name is not correct
-    """
-    secret_ext_endpoint = (f'http://localhost:{cfg.SECRET_EXT_PORT}/systemsmanager/parameters/'
-                           f'get?name={cfg.TOKEN_PARAM_PATH}&withDecryption=true')
-    request_ssm = urllib.request.Request(secret_ext_endpoint)
-    request_ssm.add_header('X-Aws-Parameters-Secrets-Token', os.environ.get('AWS_SESSION_TOKEN'))
-    resp = urllib.request.urlopen(request_ssm).read()
-
-    secret_name = json.loads(resp)['Parameter']['Name']
-    secret = json.loads(resp)['Parameter']['Value']
-
-    if secret_name == token_name:
-        return secret
-    return None
 
 
 def load_amount_ml(text):
@@ -182,6 +116,7 @@ def lambda_handler(event: dict, context: object):
         action = read_action(user.message, amt)
         print(f'action is {action}')
 
+        reply = rep.Reply(cfg.BOT_TOKEN_NAME)
         if action != 'UNKNOWN':
             print(f'TABLE_NAME={TABLE_NAME}')
             records = rec.Records(boto3.resource('dynamodb', region_name='ap-southeast-2'))
@@ -189,7 +124,7 @@ def lambda_handler(event: dict, context: object):
 
             if action == 'RECORD' and ENV == 'PROD':
                 records.add_record(category="MILK", amount=amt, message=user.message, author=user.first_name)
-                reply_user(user.chat_id, "Recorded")
+                reply.send_text(user.chat_id, "Recorded")
 
             elif action == 'TODAY' and ENV == 'PROD':
                 print('Staring TODAY')
@@ -205,10 +140,10 @@ def lambda_handler(event: dict, context: object):
                         consolidated_message += (result['text'] + '\n')
                     print(f'total_amount={total_amount}, consolidated_message={consolidated_message}')
                     output = f'Total drank = {total_amount}ml\n{consolidated_message}'
-                    reply_user(user.chat_id, output)
-
-            elif ENV == 'PROD':
-                reply_user(user.chat_id, "Ok")
+                    reply.send_text(user.chat_id, output)
+        else:
+            if ENV == 'PROD':
+                reply.send_text(user.chat_id, "Ok")
 
     return {
         "statusCode": 200,

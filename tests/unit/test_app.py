@@ -36,11 +36,6 @@ class TestCreateUser:
         assert user.message == ''
 
 
-class TestGetBotUrl:
-    def test_get_bot_url(self):
-        assert app.get_bot_url('TOKEN') == 'https://api.telegram.org/botTOKEN/sendMessage'
-
-
 class TestLoadAmountMl:
     def test_amount(self):
         text = '12.30pm 100ml'
