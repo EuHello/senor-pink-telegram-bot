@@ -56,22 +56,26 @@ class TestLoadAmountMl:
 
 class TestReadAction:
     def test_record_milk(self):
-        amt = 100
-        assert app.read_action('', amt) == 'RECORD'
+        text = '12.30pm drink 100ml'
+        assert app.read_message(text) == 'RECORD'
 
-    def test_no_milk_amount(self):
-        amt = -1
-        assert app.read_action('', amt) != 'RECORD'
+    def test_record_milk_space(self):
+        text = '12.30pm drink 100ml '
+        assert app.read_message(text) == 'RECORD'
+
+    def test_record_milk_end(self):
+        text = '12.30pm drink 100ml hot'
+        assert app.read_message(text) == 'RECORD'
 
     def test_today(self):
-        assert app.read_action('Today ', -1) == 'TODAY'
-        assert app.read_action('today ', -1) == 'TODAY'
-        assert app.read_action('today', -1) == 'TODAY'
+        assert app.read_message('Today ') == 'TODAY'
+        assert app.read_message('today ') == 'TODAY'
+        assert app.read_message('today') == 'TODAY'
 
     def test_yesterday(self):
-        assert app.read_action('Yesterday ', -1) == 'YESTERDAY'
-        assert app.read_action('yesterday ', -1) == 'YESTERDAY'
-        assert app.read_action('yesterday', -1) == 'YESTERDAY'
+        assert app.read_message('Yesterday ') == 'YESTERDAY'
+        assert app.read_message('yesterday ') == 'YESTERDAY'
+        assert app.read_message('yesterday') == 'YESTERDAY'
 
     def test_unknown(self):
-        assert app.read_action('hello world ', -1) == 'UNKNOWN'
+        assert app.read_message('hello world ') == 'UNKNOWN'

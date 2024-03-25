@@ -65,6 +65,7 @@ class Reply:
             logger.exception(f'Token is not string type. token={token}, type token={type(token)}')
             raise
 
+        logger.info(f'Sending text to chat_id={chat_id}, message={reply_message}')
         reply_endpoint = self.join_telegram_endpoint(token)
 
         params = {'chat_id': chat_id, 'text': reply_message}

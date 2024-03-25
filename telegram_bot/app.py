@@ -8,6 +8,7 @@ import config as cfg
 import user as usr
 import record as rec
 import reply as rep
+import controller as ctr
 
 logger = logging.getLogger(__name__)
 
@@ -44,25 +45,25 @@ def load_amount_ml(text):
     amount: int, the parsed amount from the text message. only the last matching amount is returned
     -1    : int, if the amount is not found
     """
-    pattern = re.compile(r'^.*\s(\d+)ml.*$')
-    m_ = pattern.match(text)
+    pattern = re.compile(r'^.*\s(\d+)ML.*$')
+    m_ = pattern.match(text.upper())
     if m_ is not None:
         amount = m_.group(1)
         return int(amount)
     return -1
 
 
-def read_action(message, amt):
-    """Gives action command to Lambda handler from text message input.
+def read_message(message):
+    """Returns action command to Lambda handler from text message input.
 
     Params:
     message: str, text message to be parsed
-    amt:     int, the amount of milk in units e.g. millimetres
 
     Returns:
     action: str, the next action to take for Lambda handler. e.g. RECORD
     """
     msg = message.strip().upper()
+    amt = load_amount_ml(msg)
     if amt > 0:
         return 'RECORD'
     elif msg == 'TODAY':
@@ -104,38 +105,37 @@ def lambda_handler(event: dict, context: object):
     user = create_user(data)
 
     if user.validate_self():
-        logger.info(f"Validated user={user.first_name}, message={user.message}")
-        amt = load_amount_ml(user.message)
-        print(f'amount found is {amt}')
-
-        action = read_action(user.message, amt)
-        print(f'action is {action}')
+        action = read_message(user.message)
+        logger.info(f"Validated user={user.first_name}, action={action}, message={user.message}")
 
         reply = rep.Reply(cfg.BOT_TOKEN_NAME)
+        control = ctr.Controller()
         if action != 'UNKNOWN':
-            print(f'TABLE_NAME={TABLE_NAME}')
             records = rec.Records(boto3.resource('dynamodb', region_name='ap-southeast-2'))
             records.init_table(TABLE_NAME)
 
-            if action == 'RECORD' and ENV == 'PROD':
+            if action == 'RECORD':
+                amt = load_amount_ml(user.message)
                 records.add_record(category="MILK", amount=amt, message=user.message, author=user.first_name)
-                reply.send_text(user.chat_id, "Recorded")
+                if ENV == 'PROD':
+                    reply.send_text(user.chat_id, "Recorded")
 
-            elif action == 'TODAY' and ENV == 'PROD':
-                print('Staring TODAY')
-                date_ = rec.get_date_action(action)
-                print(f'rec.get_date_action(action)={date_}')
-                if date_ is not None:
-                    results = records.query_records(date_)
-                    total_amount = 0
-                    consolidated_message = ''
-                    print(f'results={results}')
+            elif action == 'TODAY' or action == 'YESTERDAY':
+                date_key = control.get_pkey_query(action)
+                logger.info(f'Querying for date key ={date_key}')
+                results = records.query_records(date_key)
+                total_amount = 0
+                consolidated_message = ''
+                logger.info(f'Query results={results}')
+                if len(results) == 0:
+                    reply_text = 'No records found'
+                else:
                     for result in results:
                         total_amount += result['amount']
                         consolidated_message += (result['text'] + '\n')
-                    print(f'total_amount={total_amount}, consolidated_message={consolidated_message}')
-                    output = f'Total drank = {total_amount}ml\n{consolidated_message}'
-                    reply.send_text(user.chat_id, output)
+                    reply_text = f'Total drank = {total_amount}ml\n{consolidated_message}'
+                if ENV == 'PROD':
+                    reply.send_text(user.chat_id, reply_text)
         else:
             if ENV == 'PROD':
                 reply.send_text(user.chat_id, "Ok")

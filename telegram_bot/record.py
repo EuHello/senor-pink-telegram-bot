@@ -1,42 +1,10 @@
 import logging
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
+import controller as ctr
+
 logger = logging.getLogger(__name__)
-
-
-def generate_date_timestamp():
-    """Generate local date and timestamp, from specified timezone, not server timezone.
-
-    Returns:
-    date:      datetime date, Format YYYY-MM-DD.
-    timestamp: datetime time, Format HH:MM:SS.ssssss
-    """
-    today = datetime.now()
-    user_dt = today.astimezone(ZoneInfo('Asia/Singapore'))
-    return user_dt.date(), user_dt.time()
-
-
-def get_date_action(command: str):
-    """Returns primary key(date) depending on input Command.
-
-    Params:
-    command: str, fixed command phrase like TODAY or YESTERDAY
-
-    Returns:
-    date: datetime date
-    """
-    today, _ = generate_date_timestamp()
-    cmd = command.upper().strip()
-    if cmd == 'TODAY':
-        return today
-    elif cmd == 'YESTERDAY':
-        delta = timedelta(days=1)
-        return today - delta
-    else:
-        return None
 
 
 class Records:
@@ -61,9 +29,11 @@ class Records:
         table_name: str, name of DB table
         """
         self.table = self.dyn_resource.Table(table_name)
+        logger.info(f'Init table. table_name = {table_name}')
 
     def query_records(self, date):
         date = str(date)
+        logger.info(f'Querying records for date={date}')
         try:
             response = self.table.query(KeyConditionExpression=Key("date").eq(date))
         except ClientError as e:
@@ -87,8 +57,9 @@ class Records:
         message: str, text message from the user
         author: str, name of user
         """
-        date, timestamp = generate_date_timestamp()
-        date, timestamp = str(date), str(timestamp)
+        control = ctr.Controller()
+        date, timestamp = control.create_pkeys_date_timestamp_now()
+        logger.info(f'Adding a new record. category={category}, amount={amount}, message={message}, author={author}')
         try:
             self.table.put_item(
                 Item={
