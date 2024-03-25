@@ -4,17 +4,8 @@
 ENV = 'DEV'    # 'PROD'
 
 
-# BOT API to send message
-BOT_BASE_URL = 'https://api.telegram.org/bot'
-BOT_METHOD = 'sendMessage'
-BOT_TOKEN_NAME = 'your bot token (environment variable) name'
-# https://api.telegram.org/bot<token>/METHOD_NAME
+BOT_TOKEN_NAME = 'your bot token name (environment variable)'
 
 
-# Define PATHS for AWS SSM / Parameter Store secrets
-TOKEN_PARAM_PATH = 'YourTokenNamePath'
-SECRET_EXT_PORT = '2773'
-
-
-# Configuration of Allowed Users
+# Sample Configuration of Allowed Users
 allowed_ids = [123, 321]
