@@ -1,21 +1,30 @@
-# Python Telegram milk bot
-A Telegram bot that records babies' milk feedings for allowed users.  
-User speaks to the bot, example "12pm 120ml milk". Bot records it and informs user how much milk drank for the day.  
-Named after the legendary Señor Pink from One Piece.  
+# Python Telegram baby feeding recorder bot
+A Python Telegram bot that records a babies' milk feedings, and provides simple analytics.
 
-## Infrastructure 
-AWS Serverless Application Model (AWS SAM) with AWS Lambda  
+| User chats Bot                  | Bot reply                                                                                     | Bot Action                                                    |
+|---------------------------------|-----------------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| `baby drank 6.15pm 120ml today` | Recorded                                                                                      | Bot records 120ml, and the full text message from user        |
+| `today`                         | Total drank = 220ml<br>start milk 12.10pm 100ml<br>6.15pm 120ml                               | Bot replies how much total milk has been drank for the day    |
+| `yesterday`                     | Total drank = 420ml<br>1.30am 120ml<br>drink 5.30am 130ml<br>8.40am 80ml<br>Milk 12.35pm 90ml | Bot replies user how much total milk has been drank yesterday |
+
+
+
+# Python logic (Lambda)
+Reads user chat, 
+1. Looks for the phrase '120ml' and records the amount and the message. 
+2. Looks for the command phrases `today` or `yesterday` and returns analytics.
+
+## Implementation - AWS SAM 
+AWS Serverless Application Model (AWS SAM) with AWS Lambda. Configures AWS resources with code.
 - Built on top and extends AWS CloudFormation  
 - Event driven architecture
 - Infrastructure as code
 - Serverless Technology  
 
-https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html  
-https://aws.amazon.com/lambda/
-
 ## Architecture
-Telegram Bot/Server -> AWS API gateway -> AWS Lambda -> AWS DynamoDB  
+Telegram Bot/Server -> AWS API gateway -> AWS Lambda (Python) -> AWS DynamoDB  
 
+https://aws.amazon.com/lambda/
 
 ## Description of key components
 | Resources                                   | Description                                                                                                            |
