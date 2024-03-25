@@ -20,14 +20,10 @@ else:
 
 
 def create_user(data: dict):
-    """
-    Creates new TelegramUser instance, from data message.
+    """Creates new TelegramUser instance, from data message.
 
     Params:
-        data: dict, data from event / Telegram API Webhook
-
-    Returns:
-        user: TelegramUser instance
+    data: dict, data from event / Telegram API Webhook
     """
     user = usr.TelegramUser(id=data['from']['id'],
                             username=data['from']['username'],
@@ -40,14 +36,13 @@ def create_user(data: dict):
 
 
 def load_amount_ml(text):
-    """
-    Reads amount(millilitres) from text. E.g. for "12.30pm 200ml" it should return value 200.
+    """Reads amount (millilitres) from text. E.g. for "12.30pm 200ml" it should return value 200.
     Params:
-        text: str, text message content
+    text: str, text message content
 
     Returns:
-        amount: int, the parsed amount from the text message. only the last matching amount is returned
-        -1    : int, if the amount is not found
+    amount: int, the parsed amount from the text message. only the last matching amount is returned
+    -1    : int, if the amount is not found
     """
     pattern = re.compile(r'^.*\s(\d+)ml.*$')
     m_ = pattern.match(text)
@@ -58,14 +53,14 @@ def load_amount_ml(text):
 
 
 def read_action(message, amt):
-    """
-    Gives action based on params.
+    """Gives action command to Lambda handler from text message input.
 
     Params:
-        amt: int, the amount of milk in units e.g. millimetres
+    message: str, text message to be parsed
+    amt:     int, the amount of milk in units e.g. millimetres
 
     Returns:
-        Action: str, the next action to take for Lambda handler
+    action: str, the next action to take for Lambda handler. e.g. RECORD
     """
     msg = message.strip().upper()
     if amt > 0:
