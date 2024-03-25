@@ -34,7 +34,7 @@ Other Tools
 - Docker - for local testing
 
 ## DynamoDB Schema
-Two main actions (1) write records e.g. drank milk 100ml. (2) get records by date, sorted by time. e.g. Drank total of 500ml today.   
+Two common use case for the date - (1) write records e.g. drank milk 100ml. (2) retrieve records by date, sorted by time. e.g. Drank total of 500ml today.   
 Hence, I chose to use composite primary keys of date(partition key), and a timestamp(sort key).  
 https://aws.amazon.com/blogs/database/choosing-the-right-dynamodb-partition-key/
 
