@@ -23,16 +23,14 @@ class TelegramUser:
         self.message = message
 
     def validate_self(self, allowed_users=cfg.allowed_ids):
-        """
-        Validates TelegramUser instance.
+        """Validates TelegramUser instance.
 
         Params:
-            user: TelegramUser instance
-            allowed_users: list, allowed user ids from config
+        allowed_users: list, allowed user ids from config. Default = list from config
 
         Returns:
-            True:  bool, user is validated and in the allowed list
-            False: bool, user is not validated
+        True:  bool, user is validated and found within the allowed list
+        False: bool, user is not validated
         """
         return (
                 isinstance(self.id, int) and isinstance(self.username, str) and
