@@ -8,7 +8,7 @@ class TestCreateUser:
 
     @pytest.fixture
     def generate_data(self):
-        return {'from': {'id': 12345678, 'first_name': 'Paul', 'username': 'UserName12345', 'is_bot': False},
+        return {'from': {'id': 12345678, 'first_name': 'Paul', 'is_bot': False},
                 'chat': {'id': 9887654321},
                 'text': 'The quick brown fox jumps over the lazy dog'
                 }
@@ -17,7 +17,6 @@ class TestCreateUser:
         data = generate_data
         user = app.create_user(data)
         assert user.id == data['from']['id']
-        assert user.username == data['from']['username']
         assert user.first_name == data['from']['first_name']
         assert user.is_bot == data['from']['is_bot']
         assert user.chat_id == data['chat']['id']

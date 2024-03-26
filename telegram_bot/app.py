@@ -27,7 +27,6 @@ def create_user(data: dict):
     data: dict, data from event / Telegram API Webhook
     """
     user = usr.TelegramUser(id=data['from']['id'],
-                            username=data['from']['username'],
                             first_name=data['from']['first_name'],
                             is_bot=data['from']['is_bot'],
                             chat_id=data['chat']['id'],
@@ -119,22 +118,22 @@ def lambda_handler(event: dict, context: object):
             if ENV == 'PROD':
                 reply.send_text(user.chat_id, "Recorded")
 
-            elif action == 'TODAY' or action == 'YESTERDAY':
-                date_key = control.query_key(action)
-                logger.info(f'Querying for date key ={date_key}')
-                results = records.query_records(date_key)
-                logger.info(f'Query results={results}')
-                total_amount = 0
-                consolidated_message = ''
-                if len(results) == 0:
-                    reply_text = 'No records found'
-                else:
-                    for result in results:
-                        total_amount += result['amount']
-                        consolidated_message += (result['text'] + '\n')
-                    reply_text = f'Total drank = {total_amount}ml\n{consolidated_message}'
-                if ENV == 'PROD':
-                    reply.send_text(user.chat_id, reply_text)
+        elif action == 'TODAY' or action == 'YESTERDAY':
+            date_key = control.query_key(action)
+            logger.info(f'Querying for date key ={date_key}')
+            results = records.query_records(date_key)
+            logger.info(f'Query results={results}')
+            total_amount = 0
+            consolidated_message = ''
+            if len(results) == 0:
+                reply_text = 'No records found'
+            else:
+                for result in results:
+                    total_amount += result['amount']
+                    consolidated_message += (result['text'] + '\n')
+                reply_text = f'Total drank = {total_amount}ml\n{consolidated_message}'
+            if ENV == 'PROD':
+                reply.send_text(user.chat_id, reply_text)
 
     return {
         "statusCode": 200,

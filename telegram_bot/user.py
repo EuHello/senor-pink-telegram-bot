@@ -2,9 +2,8 @@ import config as cfg
 
 
 class TelegramUser:
-    def __init__(self, id: int, username: str, first_name: str, is_bot: bool, chat_id: int, message: str):
+    def __init__(self, id: int, first_name: str, is_bot: bool, chat_id: int, message: str):
         self.id = id
-        self.username = username
         self.first_name = first_name
         self.is_bot = is_bot
         self.chat_id = chat_id
@@ -33,7 +32,7 @@ class TelegramUser:
         False: bool, user is not validated
         """
         return (
-                isinstance(self.id, int) and isinstance(self.username, str) and
+                isinstance(self.id, int) and
                 isinstance(self.first_name, str) and isinstance(self.is_bot, bool) and
                 isinstance(self.chat_id, int) and isinstance(self.message, str) and
                 not self.is_bot and (self.id in allowed_users)

@@ -6,7 +6,7 @@ from telegram_bot.user import TelegramUser
 
 @pytest.fixture
 def generate_user():
-    return TelegramUser(12345678, 'UserName123', 'Paul Atreides', False,
+    return TelegramUser(12345678, 'Paul Atreides', False,
                         987654321, 'The quick brown fox jumps over the lazy dog')
 
 
