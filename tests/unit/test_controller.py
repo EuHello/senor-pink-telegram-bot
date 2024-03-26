@@ -10,17 +10,18 @@ class TestController:
     def generate_controller(self):
         return ctr.Controller()
 
-    def test_generate_user_datetime(self, generate_controller):
+    def test_gen_user_dt(self, generate_controller):
         control = generate_controller
         date = control.gen_user_dt()
-        assert type(date) is type(datetime.now())
+        assert isinstance(date, datetime)
 
-    def test_create_pkey_date_now(self, generate_controller):
+    def test_key_today(self, generate_controller):
         control = generate_controller
         date = control.key_today()
         assert isinstance(date, str)
+        assert len(date) is len(str(datetime.now().date()))
 
-    def test_create_pkeys_date_timestamp_now(self, generate_controller):
+    def test_keys_put_record(self, generate_controller):
         control = generate_controller
         date, timestamp = control.keys_put_record()
         assert isinstance(date, str)
@@ -28,13 +29,14 @@ class TestController:
         assert len(date) is len(str(datetime.now().date()))
         assert len(timestamp) is len(str(datetime.now().time()))
 
-    def test_create_pkey_date_yesterday(self, generate_controller):
+    def test_key_yesterday(self, generate_controller):
         control = generate_controller
-        date = control.key_today()
+        date = control.key_yesterday()
         assert isinstance(date, str)
+        assert len(date) is len(str(datetime.now().date()))
 
 
-class TestGetPKeyQuery:
+class TestQuery:
     @pytest.fixture
     def generate_controller(self):
         return ctr.Controller()
@@ -42,7 +44,6 @@ class TestGetPKeyQuery:
     def test_action_today(self, generate_controller):
         control = generate_controller
         date = control.key_today()
-
         assert control.query_key("TODAY") == date
         assert control.query_key("today") == date
 
