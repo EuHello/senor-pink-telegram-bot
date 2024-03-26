@@ -43,7 +43,7 @@ class TestLoadAmountMl:
 
     def test_amount_not_found(self):
         text = '12.30pm'
-        assert app.load_amount_ml(text) == -1
+        assert app.load_amount_ml(text) == 0
 
     def test_long_message(self):
         text = '12.30pm 80ml at home'
@@ -78,4 +78,4 @@ class TestReadAction:
         assert app.read_message('yesterday') == 'YESTERDAY'
 
     def test_unknown(self):
-        assert app.read_message('hello world ') == 'UNKNOWN'
+        assert app.read_message('hello world ') == 'RECORD'

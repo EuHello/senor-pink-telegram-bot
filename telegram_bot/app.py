@@ -50,7 +50,7 @@ def load_amount_ml(text):
     if m_ is not None:
         amount = m_.group(1)
         return int(amount)
-    return -1
+    return 0
 
 
 def read_message(message):
@@ -63,15 +63,12 @@ def read_message(message):
     action: str, the next action to take for Lambda handler. e.g. RECORD
     """
     msg = message.strip().upper()
-    amt = load_amount_ml(msg)
-    if amt > 0:
-        return 'RECORD'
-    elif msg == 'TODAY':
+    if msg == 'TODAY':
         return 'TODAY'
     elif msg == 'YESTERDAY':
         return 'YESTERDAY'
     else:
-        return 'UNKNOWN'
+        return 'RECORD'
 
 
 def lambda_handler(event: dict, context: object):
@@ -91,7 +88,7 @@ def lambda_handler(event: dict, context: object):
         API Gateway Lambda Proxy Output Format: dict
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
-    logger.info(f"Running Environment={ENV}")
+    logger.info(f"Init lambda_handler = {ENV}")
 
     try:
         data = json.loads(event['body'])['message']
@@ -102,7 +99,9 @@ def lambda_handler(event: dict, context: object):
             "body": json.dumps({"message": "Error. An unexpected error occurs."})
         }
 
+    logger.info(f"New chat, data={data}")
     user = create_user(data)
+    logger.info(f"New chat, user={user.first_name}, id={user.chat_id}, message={user.message}")
 
     if user.validate_self():
         action = read_message(user.message)
@@ -110,23 +109,23 @@ def lambda_handler(event: dict, context: object):
 
         reply = rep.Reply(cfg.BOT_TOKEN_NAME)
         control = ctr.Controller()
-        if action != 'UNKNOWN':
-            records = rec.Records(boto3.resource('dynamodb', region_name='ap-southeast-2'))
-            records.init_table(TABLE_NAME)
 
-            if action == 'RECORD':
-                amt = load_amount_ml(user.message)
-                records.add_record(category="MILK", amount=amt, message=user.message, author=user.first_name)
-                if ENV == 'PROD':
-                    reply.send_text(user.chat_id, "Recorded")
+        records = rec.Records(boto3.resource('dynamodb', region_name='ap-southeast-2'))
+        records.init_table(TABLE_NAME)
+
+        if action == 'RECORD':
+            amt = load_amount_ml(user.message)
+            records.add_record(category="MILK", amount=amt, message=user.message, author=user.first_name)
+            if ENV == 'PROD':
+                reply.send_text(user.chat_id, "Recorded")
 
             elif action == 'TODAY' or action == 'YESTERDAY':
                 date_key = control.query_key(action)
                 logger.info(f'Querying for date key ={date_key}')
                 results = records.query_records(date_key)
+                logger.info(f'Query results={results}')
                 total_amount = 0
                 consolidated_message = ''
-                logger.info(f'Query results={results}')
                 if len(results) == 0:
                     reply_text = 'No records found'
                 else:
@@ -136,9 +135,6 @@ def lambda_handler(event: dict, context: object):
                     reply_text = f'Total drank = {total_amount}ml\n{consolidated_message}'
                 if ENV == 'PROD':
                     reply.send_text(user.chat_id, reply_text)
-        else:
-            if ENV == 'PROD':
-                reply.send_text(user.chat_id, "Ok")
 
     return {
         "statusCode": 200,
