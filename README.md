@@ -60,7 +60,7 @@ Speak to Botfather https://core.telegram.org/bots/features#botfather
 ### API - Web-hook
 There are two options to communicate with Telegram bot api.  
 1. Long Polling  
-2. Web-hook - this is my preferred option due for serverless solution like Lambda.  
+2. Web-hook - this is my preferred option for a serverless solution like Lambda.  
 
 Why Web-hook?
 1. Lower api calls compared to long polling, leading to more costs savings.    
@@ -130,7 +130,7 @@ sam logs -n <resource name> --stack-name <mystack>      # useful options: --tail
 
 View Endpoints and Resources
 ```
-sam list endpoints      # useful opions: --region <region> --profile <profile>
+sam list endpoints      # useful options: --region <region> --profile <profile>
 sam list resources
 ```
 
