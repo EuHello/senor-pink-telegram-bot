@@ -121,7 +121,7 @@ def lambda_handler(event: dict, context: object):
                     reply.send_text(user.chat_id, "Recorded")
 
             elif action == 'TODAY' or action == 'YESTERDAY':
-                date_key = control.get_pkey_query(action)
+                date_key = control.query_key(action)
                 logger.info(f'Querying for date key ={date_key}')
                 results = records.query_records(date_key)
                 total_amount = 0
